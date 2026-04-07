@@ -1,0 +1,17 @@
+{
+  "all": true,
+  "include": [
+    "cli/**/*.js",
+    "bin/**/*.js"
+  ],
+  "exclude": [
+    "tests/**/*",
+    "node_modules/**/*",
+    "**/*.test.js",
+    "cli/utils/config-builder.js"
+  ],
+  "reporter": [
+    "lcov"
+  ],
+  "check-coverage": false
+}
