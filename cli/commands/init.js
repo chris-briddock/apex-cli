@@ -10,98 +10,127 @@ import { generateSampleConfig } from '../utils/config-loader.js';
 import { detectFramework, getRecommendedOutputDir, getAvailableFrameworks } from '../utils/framework-detector.js';
 
 /**
- * Initialize ApexCSS in the user's project
- * @param {object} options - Command options
+ * Prompt user for initialization options
+ * @param {object} framework - Detected framework
+ * @param {object} options - Current options
+ * @returns {Promise<{selectedFramework: object, outputDir: string, addImport: boolean}>}
  */
-export async function initCommand(options) {
-  const cwd = process.cwd();
+async function promptForOptions(framework, options) {
+  const { default: inquirer } = await import('inquirer');
 
-  logger.header('ApexCSS Initialization');
-  logger.newline();
+  const answers = await inquirer.prompt([
+    {
+      type: 'list',
+      name: 'framework',
+      message: 'Select your framework:',
+      default: framework.id,
+      choices: getAvailableFrameworks().map(f => ({
+        name: f.name,
+        value: f.id
+      }))
+    },
+    {
+      type: 'input',
+      name: 'outputDir',
+      message: 'CSS output directory:',
+      default: options.outputDir || getRecommendedOutputDir(framework.id)
+    },
+    {
+      type: 'confirm',
+      name: 'addImport',
+      message: framework.entryFile
+        ? `Add import to ${framework.entryFile}?`
+        : 'Add import to your main entry file?',
+      default: true,
+      when: () => framework.entryFile || framework.id !== 'vanilla'
+    }
+  ]);
 
-  // Detect framework
-  const framework = detectFramework(cwd);
+  return {
+    selectedFramework: { ...framework, id: answers.framework },
+    outputDir: answers.outputDir,
+    addImport: answers.addImport
+  };
+}
 
-  logger.info(`Detected framework: ${framework.name}`);
-  logger.newline();
+/**
+ * Get user options (interactive or CLI)
+ * @param {object} framework - Detected framework
+ * @param {object} options - Command options
+ * @param {string} cwd - Current working directory
+ * @returns {Promise<{selectedFramework: object, outputDir: string, addImport: boolean}>}
+ */
+async function getUserOptions(framework, options, cwd = process.cwd()) {
+  let result = {
+    selectedFramework: framework,
+    outputDir: options.outputDir,
+    addImport: options.addImport
+  };
 
-  // Interactive prompts if not disabled
-  let useInteractive = options.interactive;
-  let selectedFramework = framework;
-  let addImport = options.addImport;
-  let outputDir = options.outputDir;
-
-  if (useInteractive) {
+  if (options.interactive) {
     try {
-      const { default: inquirer } = await import('inquirer');
-
-      const answers = await inquirer.prompt([
-        {
-          type: 'list',
-          name: 'framework',
-          message: 'Select your framework:',
-          default: framework.id,
-          choices: getAvailableFrameworks().map(f => ({
-            name: f.name,
-            value: f.id
-          }))
-        },
-        {
-          type: 'input',
-          name: 'outputDir',
-          message: 'CSS output directory:',
-          default: outputDir || getRecommendedOutputDir(framework.id)
-        },
-        {
-          type: 'confirm',
-          name: 'addImport',
-          message: framework.entryFile
-            ? `Add import to ${framework.entryFile}?`
-            : 'Add import to your main entry file?',
-          default: true,
-          when: () => framework.entryFile || framework.id !== 'vanilla'
-        }
-      ]);
-
-      selectedFramework = { ...framework, id: answers.framework };
-      outputDir = answers.outputDir;
-      addImport = answers.addImport;
-
+      result = await promptForOptions(framework, options);
     } catch {
-      // inquirer not available, fall back to non-interactive
+      // Interactive mode failed - fallback to defaults
       logger.warn('Interactive mode not available, using defaults');
-      useInteractive = false;
     }
   }
 
-  // Use specified framework if provided via CLI
+  // Override with CLI framework option if provided
   if (options.framework) {
-    selectedFramework = { ...framework, id: options.framework };
-  }
+    // Update entryFile based on the new framework
+    const { FRAMEWORKS, getAvailableFrameworks } = await import('../utils/framework-detector.js');
+    const availableFrameworks = getAvailableFrameworks();
+    const frameworkInfo = availableFrameworks.find(f => f.id === options.framework);
+    const frameworkDef = FRAMEWORKS[options.framework];
 
-  // Ensure output directory exists
-  const outputPath = resolve(cwd, outputDir);
-  await mkdir(outputPath, { recursive: true });
+    if (frameworkDef) {
+      const entryFiles = frameworkDef.entryFiles || [];
+      const existingEntry = entryFiles.find(file =>
+        existsSync(resolve(cwd, file))
+      );
 
-  // Create config file
-  const configPath = resolve(cwd, options.configPath);
-
-  if (existsSync(configPath)) {
-    logger.warn(`Config file already exists at ${options.configPath}`);
-    const { overwrite } = useInteractive ? await promptOverwrite() : { overwrite: false };
-
-    if (!overwrite) {
-      logger.info('Skipping config creation');
-      return;
+      result.selectedFramework = {
+        ...framework,
+        ...frameworkDef,
+        id: options.framework,
+        name: frameworkInfo?.name || options.framework,
+        entryFile: existingEntry || frameworkDef.fallbackFile
+      };
     }
   }
 
-  // Generate and write config
-  const configContent = generateSampleConfig();
-  writeFileSync(configPath, configContent);
-  logger.success(`Created config file: ${logger.path(options.configPath)}`);
+  return result;
+}
 
-  // Create .gitignore suggestion
+/**
+ * Handle existing config file
+ * @param {string} configPath - Path to config file
+ * @param {boolean} useInteractive - Whether interactive mode is enabled
+ * @returns {Promise<boolean>} - True if should continue
+ */
+async function handleExistingConfig(configPath, useInteractive) {
+  if (!existsSync(configPath)) {
+    return true;
+  }
+
+  logger.warn(`Config file already exists at ${configPath}`);
+  const { overwrite } = useInteractive ? await promptOverwrite() : { overwrite: false };
+
+  if (!overwrite) {
+    logger.info('Skipping config creation');
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Setup gitignore for output directory
+ * @param {string} cwd - Current working directory
+ * @param {string} outputDir - Output directory
+ */
+function setupGitignore(cwd, outputDir) {
   const gitignorePath = resolve(cwd, '.gitignore');
   const gitignoreEntry = `# ApexCSS generated files\n${outputDir.replace(/^\.\//, '')}\n`;
 
@@ -114,25 +143,72 @@ export async function initCommand(options) {
     writeFileSync(gitignorePath, gitignoreEntry);
     logger.success(`Created ${logger.path('.gitignore')}`);
   }
+}
 
-  // Add import to entry file if requested
-  if (addImport && selectedFramework.entryFile) {
-    const entryFilePath = resolve(cwd, selectedFramework.entryFile);
+/**
+ * Add import to framework entry file
+ * @param {string} cwd - Current working directory
+ * @param {object} framework - Selected framework
+ * @param {string} outputDir - Output directory
+ */
+function addFrameworkImport(cwd, framework, outputDir) {
+  if (!framework.entryFile) {
+    return;
+  }
 
-    if (existsSync(entryFilePath)) {
-      const importStatement = getImportStatement(selectedFramework.id, outputDir);
+  const entryFilePath = resolve(cwd, framework.entryFile);
 
-      try {
-        addImportToFile(entryFilePath, importStatement, selectedFramework.id);
-        logger.success(`Added import to ${logger.path(selectedFramework.entryFile)}`);
-      } catch (error) {
-        logger.warn(`Could not add import automatically: ${error.message}`);
-        logger.info(`Manually add: ${logger.cmd(importStatement.trim())}`);
-      }
-    } else {
-      logger.warn(`Entry file not found: ${selectedFramework.entryFile}`);
-      logger.info('Manually add import to your main entry file');
-    }
+  if (!existsSync(entryFilePath)) {
+    logger.warn(`Entry file not found: ${framework.entryFile}`);
+    logger.info('Manually add import to your main entry file');
+    return;
+  }
+
+  const importStatement = getImportStatement(framework.id, outputDir);
+
+  try {
+    addImportToFile(entryFilePath, importStatement, framework.id);
+    logger.success(`Added import to ${logger.path(framework.entryFile)}`);
+  } catch (error) {
+    logger.warn(`Could not add import automatically: ${error.message}`);
+    logger.info(`Manually add: ${logger.cmd(importStatement.trim())}`);
+  }
+}
+
+/**
+ * Initialize ApexCSS in the user's project
+ * @param {object} options - Command options
+ */
+export async function initCommand(options) {
+  const cwd = process.cwd();
+
+  logger.header('ApexCSS Initialization');
+  logger.newline();
+
+  const framework = detectFramework(cwd);
+  logger.info(`Detected framework: ${framework.name}`);
+  logger.newline();
+
+  const { selectedFramework, outputDir, addImport } = await getUserOptions(framework, options, cwd);
+
+  const outputPath = resolve(cwd, outputDir);
+  await mkdir(outputPath, { recursive: true });
+
+  const configPath = resolve(cwd, options.configPath);
+  const shouldContinue = await handleExistingConfig(configPath, options.interactive);
+
+  if (!shouldContinue) {
+    return;
+  }
+
+  const configContent = generateSampleConfig();
+  writeFileSync(configPath, configContent);
+  logger.success(`Created config file: ${logger.path(options.configPath)}`);
+
+  setupGitignore(cwd, outputDir);
+
+  if (addImport) {
+    addFrameworkImport(cwd, selectedFramework, outputDir);
   }
 
   logger.newline();
@@ -149,6 +225,11 @@ export async function initCommand(options) {
 
 /**
  * Prompt for overwrite confirmation
+ * @returns {Promise<{overwrite: boolean}>}
+ */
+/**
+ * Prompt for overwrite confirmation
+ * @returns {Promise<{overwrite: boolean}>}
  */
 export async function promptOverwrite() {
   try {
@@ -160,9 +241,21 @@ export async function promptOverwrite() {
       default: false
     }]);
   } catch {
+    // Inquirer not available - default to not overwriting
     return { overwrite: false };
   }
 }
+
+/**
+ * CSS cascade layers import statement for all frameworks
+ * This uses the standard apexcss package imports with cascade layers
+ */
+const CASCADE_LAYER_IMPORTS = `@layer base, utilities, themes;
+
+@import 'apexcss/base' layer(base);
+@import 'apexcss/utilities' layer(utilities);
+@import 'apexcss/themes' layer(themes);
+`;
 
 /**
  * Get the appropriate import statement for the framework
@@ -171,23 +264,30 @@ export async function promptOverwrite() {
  * @returns {string} - Import statement
  */
 export function getImportStatement(frameworkId, outputDir) {
-  // Remove leading ./ for cleaner imports
-  const cleanPath = outputDir.replace(/^\.\//, '');
+  // Normalize path: remove leading ./ and trailing slashes
+  let cleanPath = outputDir.replace(/^\.\//, '').replace(/\/+$/, '');
 
+  // If path is empty after cleanup, use 'dist'
+  if (!cleanPath) {
+    cleanPath = 'dist';
+  }
+
+  // All CSS-based frameworks now use cascade layers with node_modules imports
   switch (frameworkId) {
-  case 'next':
-    return `import '${cleanPath}/apex.css';\n`;
+  case 'angular':
   case 'react':
   case 'vue':
   case 'svelte':
   case 'vanilla':
-    return `import './${cleanPath}/apex.css';\n`;
-  case 'angular':
-    return `@import '${cleanPath}/apex.css';\n`;
+  case 'astro':
+    return CASCADE_LAYER_IMPORTS;
+  case 'next':
+    // Next.js needs JS imports in layout.tsx, not CSS @imports (CSS @import doesn't resolve node_modules)
+    return 'import \'apexcss/base\';\nimport \'apexcss/utilities\';\nimport \'apexcss/themes\';\n';
   case 'nuxt':
-    return `// Add to nuxt.config.ts:\n// css: ['${cleanPath}/apex.css']\n`;
+    return '// Add to nuxt.config.ts:\n// css: [\'apexcss/base\', \'apexcss/utilities\', \'apexcss/themes\']\n';
   default:
-    return `import '${cleanPath}/apex.css';\n`;
+    return CASCADE_LAYER_IMPORTS;
   }
 }
 
@@ -207,12 +307,14 @@ export function addImportToFile(filePath, importStatement, frameworkId) {
 
   let newContent;
 
-  switch (frameworkId) {
-  case 'react':
-  case 'vue':
-  case 'svelte':
-  case 'vanilla': {
-    // Add after other imports, before code
+  // Check if this is a CSS file (for CSS cascade layer imports)
+  const isCSSFile = filePath.endsWith('.css') || filePath.endsWith('.scss');
+
+  if (isCSSFile) {
+    // For CSS files, add cascade layer imports at the top
+    newContent = importStatement + content;
+  } else if (frameworkId === 'react' || frameworkId === 'vue' || frameworkId === 'svelte' || frameworkId === 'astro' || frameworkId === 'vanilla') {
+    // Add after other JS imports, before code
     const lines = content.split('\n');
     let lastImportIndex = -1;
 
@@ -228,16 +330,8 @@ export function addImportToFile(filePath, importStatement, frameworkId) {
     } else {
       newContent = importStatement + content;
     }
-    break;
-  }
-
-  case 'angular': {
-    // Add to the top of styles file
-    newContent = importStatement + content;
-    break;
-  }
-
-  default:
+  } else {
+    // Default: add at the top
     newContent = importStatement + content;
   }
 

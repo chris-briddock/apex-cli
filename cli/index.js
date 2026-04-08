@@ -14,17 +14,13 @@ const __dirname = dirname(__filename);
 
 // Read package.json for version
 let version = '0.0.0';
-try {
-  const packageJsonPath = join(__dirname, '..', 'package.json');
-  const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
-  version = packageJson.version;
-} catch {
-  // Fallback version
-}
+const packageJsonPath = join(__dirname, '..', 'package.json');
+const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
+version = packageJson.version;
 
 /**
  * Main CLI entry point
- * @param args
+ * @param {string[]} args - Command line arguments
  */
 export function cli(args) {
   const program = new Command();
@@ -45,9 +41,9 @@ export function cli(args) {
   program
     .command('init')
     .description('Initialize ApexCSS configuration in your project')
-    .option('-f, --framework <name>', 'specify framework (react, vue, angular, svelte, next, nuxt, vanilla)')
-    .option('--no-interactive', 'skip interactive prompts', false)
-    .option('--no-import', 'skip adding imports to entry files', false)
+    .option('-f, --framework <name>', 'specify framework (react, vue, angular, svelte, astro, next, nuxt, vanilla, astro)')
+    .option('--no-interactive', 'skip interactive prompts')
+    .option('--no-import', 'skip adding imports to entry files')
     .action(async (options) => {
       try {
         await initCommand({

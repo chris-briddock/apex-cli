@@ -296,8 +296,8 @@ export function loadConfig(configPath) {
     // Validate the merged config
     const validation = validateConfig(merged);
     if (!validation.valid) {
-      const errorMessages = validation.errors.map(e => `  - ${  e}`).join('\n');
-      throw new Error(`Configuration validation failed:\n${  errorMessages}`);
+      const errorMessages = validation.errors.map(e => `  - ${e}`).join('\n');
+      throw new Error(`Configuration validation failed:\n${errorMessages}`);
     }
 
     return merged;
@@ -320,7 +320,7 @@ export function mergeConfig(target, source) {
   const output = { ...target };
 
   for (const key in source) {
-    if (Object.prototype.hasOwnProperty.call(source, key)) {
+    if (Object.hasOwn(source, key)) {
       if (isObject(source[key]) && isObject(target[key])) {
         output[key] = mergeConfig(target[key], source[key]);
       } else {
@@ -332,6 +332,11 @@ export function mergeConfig(target, source) {
   return output;
 }
 
+/**
+ * Check if value is a plain object
+ * @param {*} item - Value to check
+ * @returns {boolean}
+ */
 /**
  * Check if value is a plain object
  * @param {*} item - Value to check
@@ -359,10 +364,15 @@ export function validateFeatures(features, errors) {
  * @param {object} breakpoints - Breakpoints configuration
  * @param {Array} errors - Error collection
  */
+/**
+ * Validates that all breakpoints are valid CSS lengths
+ * @param {object} breakpoints - Breakpoints configuration
+ * @param {Array} errors - Error collection
+ */
 export function validateBreakpoints(breakpoints, errors) {
   const cssLengthPattern = /^\d+(px|rem|em|%)?$/;
   for (const [key, value] of Object.entries(breakpoints)) {
-    if (typeof value !== 'string' || !cssLengthPattern.exec(value)) {
+    if (typeof value !== 'string' || !cssLengthPattern.test(value)) {
       errors.push(`breakpoints.${key} must be a valid CSS length`);
     }
   }
@@ -594,7 +604,7 @@ export default {
     darkMode: true,
     rtl: true,
     accessibility: true,
-    zIndex: true,
+    zIndex: true
   },
 
   // ============================================================================
@@ -607,7 +617,7 @@ export default {
     xl: '1280px',
     xxl: '2560px', // 2K / QHD
     xxxl: '3840px', // 4K / UHD
-    ultra: '7680px', // 8K
+    ultra: '7680px' // 8K
   },
 
   // ============================================================================
@@ -648,7 +658,7 @@ export default {
     64: '16rem',
     72: '18rem',
     80: '20rem',
-    96: '24rem',
+    96: '24rem'
   },
 
   // ============================================================================
@@ -678,8 +688,8 @@ export default {
         700: 45,
         800: 35,
         900: 25,
-        950: 20,
-      },
+        950: 20
+      }
     },
     // Gray (neutral, low chroma)
     gray: {
@@ -696,8 +706,8 @@ export default {
         700: 45,
         800: 35,
         900: 25,
-        950: 18,
-      },
+        950: 18
+      }
     },
     // Success Green
     success: {
@@ -714,8 +724,8 @@ export default {
         700: 45,
         800: 35,
         900: 25,
-        950: 20,
-      },
+        950: 20
+      }
     },
     // Warning Amber
     warning: {
@@ -732,8 +742,8 @@ export default {
         700: 50,
         800: 40,
         900: 30,
-        950: 25,
-      },
+        950: 25
+      }
     },
     // Danger Red
     danger: {
@@ -750,8 +760,8 @@ export default {
         700: 45,
         800: 35,
         900: 25,
-        950: 20,
-      },
+        950: 20
+      }
     },
     // Info Sky
     info: {
@@ -768,8 +778,8 @@ export default {
         700: 45,
         800: 35,
         900: 25,
-        950: 20,
-      },
+        950: 20
+      }
     },
     // Extended palette
     extended: {
@@ -780,8 +790,8 @@ export default {
       purple: { hue: 300, chroma: 0.22 },
       orange: { hue: 55, chroma: 0.18 },
       teal: { hue: 180, chroma: 0.16 },
-      pink: { hue: 340, chroma: 0.18 },
-    },
+      pink: { hue: 340, chroma: 0.18 }
+    }
   },
 
   // ============================================================================
@@ -798,7 +808,7 @@ export default {
         'Roboto',
         'Helvetica Neue',
         'Arial',
-        'sans-serif',
+        'sans-serif'
       ],
       serif: [
         'ui-serif',
@@ -806,7 +816,7 @@ export default {
         'Cambria',
         'Times New Roman',
         'Times',
-        'serif',
+        'serif'
       ],
       mono: [
         'ui-monospace',
@@ -816,7 +826,7 @@ export default {
         'Consolas',
         'Liberation Mono',
         'Courier New',
-        'monospace',
+        'monospace'
       ],
     },
     fontSize: {
@@ -832,7 +842,7 @@ export default {
       '6xl': ['3.75rem', { lineHeight: '1' }],
       '7xl': ['4.5rem', { lineHeight: '1' }],
       '8xl': ['6rem', { lineHeight: '1' }],
-      '9xl': ['8rem', { lineHeight: '1' }],
+      '9xl': ['8rem', { lineHeight: '1' }]
     },
     fontWeight: {
       thin: '100',
@@ -843,7 +853,7 @@ export default {
       semibold: '600',
       bold: '700',
       extrabold: '800',
-      black: '900',
+      black: '900'
     },
     letterSpacing: {
       tighter: '-0.05em',
@@ -851,7 +861,7 @@ export default {
       normal: '0em',
       wide: '0.025em',
       wider: '0.05em',
-      widest: '0.1em',
+      widest: '0.1em'
     },
     lineHeight: {
       none: '1',
@@ -859,8 +869,8 @@ export default {
       snug: '1.375',
       normal: '1.5',
       relaxed: '1.625',
-      loose: '2',
-    },
+      loose: '2'
+    }
   },
 
   // ============================================================================
@@ -875,7 +885,7 @@ export default {
     xl: '0.75rem',
     '2xl': '1rem',
     '3xl': '1.5rem',
-    full: '9999px',
+    full: '9999px'
   },
 
   // ============================================================================
@@ -889,7 +899,7 @@ export default {
     xl: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
     '2xl': '0 25px 50px -12px rgb(0 0 0 / 0.25)',
     inner: 'inset 0 2px 4px 0 rgb(0 0 0 / 0.05)',
-    none: 'none',
+    none: 'none'
   },
 
   // ============================================================================
@@ -911,8 +921,8 @@ export default {
       default: 'cubic-bezier(0.4, 0, 0.2, 1)',
       in: 'cubic-bezier(0.4, 0, 1, 1)',
       out: 'cubic-bezier(0, 0, 0.2, 1)',
-      'in-out': 'cubic-bezier(0.4, 0, 0.2, 1)',
-    },
+      'in-out': 'cubic-bezier(0.4, 0, 0.2, 1)'
+    }
   },
 
   // ============================================================================
@@ -925,7 +935,7 @@ export default {
     20: '20',
     30: '30',
     40: '40',
-    50: '50',
+    50: '50'
   },
 
   // ============================================================================
@@ -946,7 +956,7 @@ export default {
     80: '0.8',
     90: '0.9',
     95: '0.95',
-    100: '1',
+    100: '1'
   },
 };
 `;

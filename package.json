@@ -1,5 +1,5 @@
 {
-  "name": "@apexcss/cli",
+  "name": "apexcss-cli",
   "version": "0.1.0",
   "description": "ApexCSS CLI - Build and customize your CSS framework",
   "type": "module",
@@ -16,7 +16,7 @@
     "registry": "https://registry.npmjs.org/"
   },
   "bin": {
-    "apexcss": "./bin/apexcss.js"
+    "apexcss": "bin/apexcss.js"
   },
   "scripts": {
     "test": "node tests/run-tests.js",
@@ -43,7 +43,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/chris-briddock/apex-cli"
+    "url": "git+https://github.com/chris-briddock/apex-cli.git"
   },
   "author": "",
   "license": "MIT",

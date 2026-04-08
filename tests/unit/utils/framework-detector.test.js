@@ -124,13 +124,13 @@ describe('framework-detector', () => {
         dependencies: { react: '18.0.0' }
       }));
 
-      // Create src directory and main.jsx
+      // Create src directory and index.css (CSS files are now primary entry points)
       const srcDir = join(tempDir, 'src');
       mkdirSync(srcDir);
-      writeFileSync(join(srcDir, 'main.jsx'), '');
+      writeFileSync(join(srcDir, 'index.css'), '');
 
       const result = detectFramework(tempDir);
-      assert.strictEqual(result.entryFile, 'src/main.jsx');
+      assert.strictEqual(result.entryFile, 'src/index.css');
     });
   });
 

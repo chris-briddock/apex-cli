@@ -252,7 +252,7 @@ export async function buildCommand(options) {
  * @param {string} tempDir - Temp directory path
  * @param {object} options - Build options
  * @param {string} outputDir - Output directory path
- * @param layers
+ * @param {string[]} layers - Array of layer names
  * @param {string} scssContent - SCSS content
  * @returns {Promise<void>}
  */
@@ -313,8 +313,8 @@ async function runViteBuild(tempDir, options, outputDir, layers, scssContent) {
   const contentBytes = Buffer.byteLength(cssContent, 'utf8');
   const sizeKB = (contentBytes / 1024).toFixed(2);
 
-  const filePath = logger.path(`${filename  }.css`);
-  logger.success(`Built: ${  filePath  } (${  sizeKB  } KB) [${  description  }]`);
+  const filePath = logger.path(`${filename}.css`);
+  logger.success(`Built: ${filePath} (${sizeKB} KB) [${description}]`);
 
   // Copy source map if generated
   if (options.sourcemap) {
@@ -330,8 +330,8 @@ async function runViteBuild(tempDir, options, outputDir, layers, scssContent) {
   // Output SCSS if requested
   if (options.format === 'scss' || options.format === 'both') {
     writeFileSync(resolve(outputDir, `${filename}.scss`), scssContent);
-    const scssPath = logger.path(`${filename  }.scss`);
-    logger.success(`Generated: ${  scssPath}`);
+    const scssPath = logger.path(`${filename}.scss`);
+    logger.success(`Generated: ${scssPath}`);
   }
 
   // Clean up temp directory

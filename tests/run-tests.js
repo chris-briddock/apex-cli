@@ -17,8 +17,9 @@ const isCI = process.env.CI === 'true';
 
 /**
  * Recursively get all test files
- * @param dir
- * @param files
+ * @param {string} dir
+ * @param {string[]} files
+ * @returns {string[]}
  */
 function getTestFiles(dir, files = []) {
   const items = readdirSync(dir, { withFileTypes: true });

@@ -66,6 +66,7 @@ export async function doctorCommand() {
 
 /**
  * Check Node.js version
+ * @returns {object}
  */
 function checkNodeVersion() {
   const nodeVersion = process.version;
@@ -96,6 +97,7 @@ function checkNodeVersion() {
 
 /**
  * Check package manager availability
+ * @returns {object}
  */
 function checkPackageManager() {
   const managers = [
@@ -111,7 +113,7 @@ function checkPackageManager() {
       const version = execSync(manager.cmd, { encoding: 'utf-8', stdio: 'pipe' }).trim();
       available.push(`${manager.name} v${version}`);
     } catch {
-      // Not available
+      // Package manager not available - expected if not installed
     }
   }
 
@@ -133,7 +135,8 @@ function checkPackageManager() {
 
 /**
  * Check if ApexCSS is installed
- * @param cwd
+ * @param {string} cwd
+ * @returns {object}
  */
 function checkApexcssInstallation(cwd) {
   const packageJsonPath = resolve(cwd, 'package.json');
@@ -176,7 +179,8 @@ function checkApexcssInstallation(cwd) {
 
 /**
  * Check for config file
- * @param cwd
+ * @param {string} cwd
+ * @returns {object}
  */
 function checkConfigFile(cwd) {
   const configPath = resolve(cwd, 'apex.config.js');
@@ -199,7 +203,8 @@ function checkConfigFile(cwd) {
 
 /**
  * Check framework detection
- * @param cwd
+ * @param {string} cwd
+ * @returns {object}
  */
 function checkFramework(cwd) {
   const framework = detectFramework(cwd);
@@ -231,7 +236,8 @@ function checkFramework(cwd) {
 
 /**
  * Check for Vite
- * @param cwd
+ * @param {string} cwd
+ * @returns {object}
  */
 function checkVite(cwd) {
   const packageJsonPath = resolve(cwd, 'package.json');

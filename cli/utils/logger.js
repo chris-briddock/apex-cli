@@ -17,8 +17,15 @@ const colors = {
 
 /**
  * Format a message with color
- * @param text
- * @param color
+ * @param {string} text
+ * @param {string} color
+ * @returns {string}
+ */
+/**
+ * Format a message with color
+ * @param {string} text - Text to colorize
+ * @param {string} color - Color name
+ * @returns {string} - Colorized text
  */
 function colorize(text, color) {
   return `${colors[color]}${text}${colors.reset}`;
@@ -27,7 +34,7 @@ function colorize(text, color) {
 export const logger = {
   /**
    * Info message
-   * @param message
+   * @param {string} message
    */
   info(message) {
     console.log(`${colorize('[apexcss]', 'cyan')} ${message}`);
@@ -35,7 +42,7 @@ export const logger = {
 
   /**
    * Success message
-   * @param message
+   * @param {string} message
    */
   success(message) {
     console.log(`${colorize('[apexcss]', 'green')} ${colorize('✔', 'green')} ${message}`);
@@ -43,7 +50,7 @@ export const logger = {
 
   /**
    * Warning message
-   * @param message
+   * @param {string} message
    */
   warn(message) {
     console.warn(`${colorize('[apexcss]', 'yellow')} ${colorize('⚠', 'yellow')} ${message}`);
@@ -51,7 +58,7 @@ export const logger = {
 
   /**
    * Error message
-   * @param message
+   * @param {string} message
    */
   error(message) {
     console.error(`${colorize('[apexcss]', 'red')} ${colorize('✖', 'red')} ${message}`);
@@ -59,7 +66,7 @@ export const logger = {
 
   /**
    * Debug message (only shown with DEBUG env var)
-   * @param message
+   * @param {string} message
    */
   debug(message) {
     if (process.env.DEBUG) {
@@ -76,7 +83,7 @@ export const logger = {
 
   /**
    * Section header
-   * @param title
+   * @param {string} title
    */
   header(title) {
     this.newline();
@@ -86,7 +93,7 @@ export const logger = {
 
   /**
    * List items
-   * @param items
+   * @param {string[]} items
    */
   list(items) {
     items.forEach(item => {
@@ -96,7 +103,8 @@ export const logger = {
 
   /**
    * Format file path
-   * @param filepath
+   * @param {string} filepath
+   * @returns {string}
    */
   path(filepath) {
     return colorize(filepath, 'cyan');
@@ -104,7 +112,8 @@ export const logger = {
 
   /**
    * Format command
-   * @param command
+   * @param {string} command
+   * @returns {string}
    */
   cmd(command) {
     return colorize(command, 'yellow');

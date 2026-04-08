@@ -24,50 +24,59 @@ describe('init command', () => {
   });
 
   describe('getImportStatement', () => {
-    it('should return Next.js import statement', () => {
+    const CASCADE_LAYER_IMPORTS = `@layer base, utilities, themes;
+
+@import 'apexcss/base' layer(base);
+@import 'apexcss/utilities' layer(utilities);
+@import 'apexcss/themes' layer(themes);
+`;
+
+    it('should return Next.js import statement with JS imports', () => {
       const result = getImportStatement('next', './src/apexcss');
-      assert.strictEqual(result, 'import \'src/apexcss/apex.css\';\n');
+      assert.strictEqual(result, 'import \'apexcss/base\';\nimport \'apexcss/utilities\';\nimport \'apexcss/themes\';\n');
     });
 
-    it('should return React import statement', () => {
+    it('should return React import statement with cascade layers', () => {
       const result = getImportStatement('react', './src/apexcss');
-      assert.strictEqual(result, 'import \'./src/apexcss/apex.css\';\n');
+      assert.strictEqual(result, CASCADE_LAYER_IMPORTS);
     });
 
-    it('should return Vue import statement', () => {
+    it('should return Vue import statement with cascade layers', () => {
       const result = getImportStatement('vue', './src/apexcss');
-      assert.strictEqual(result, 'import \'./src/apexcss/apex.css\';\n');
+      assert.strictEqual(result, CASCADE_LAYER_IMPORTS);
     });
 
-    it('should return Svelte import statement', () => {
+    it('should return Svelte import statement with cascade layers', () => {
       const result = getImportStatement('svelte', './src/apexcss');
-      assert.strictEqual(result, 'import \'./src/apexcss/apex.css\';\n');
+      assert.strictEqual(result, CASCADE_LAYER_IMPORTS);
     });
 
-    it('should return Vanilla import statement', () => {
+    it('should return Vanilla import statement with cascade layers', () => {
       const result = getImportStatement('vanilla', './src/apexcss');
-      assert.strictEqual(result, 'import \'./src/apexcss/apex.css\';\n');
+      assert.strictEqual(result, CASCADE_LAYER_IMPORTS);
     });
 
-    it('should return Angular import statement', () => {
+    it('should return Angular import statement with cascade layers', () => {
       const result = getImportStatement('angular', './src/apexcss');
-      assert.strictEqual(result, '@import \'src/apexcss/apex.css\';\n');
+      assert.strictEqual(result, CASCADE_LAYER_IMPORTS);
     });
 
-    it('should return Nuxt config comment', () => {
+    it('should return Nuxt config comment with apexcss imports', () => {
       const result = getImportStatement('nuxt', './src/apexcss');
       assert.ok(result.includes('nuxt.config.ts'));
-      assert.ok(result.includes('css: [\'src/apexcss/apex.css\']'));
+      assert.ok(result.includes('apexcss/base'));
+      assert.ok(result.includes('apexcss/utilities'));
+      assert.ok(result.includes('apexcss/themes'));
     });
 
-    it('should handle default case for unknown framework', () => {
+    it('should handle default case with cascade layers', () => {
       const result = getImportStatement('unknown', './src/apexcss');
-      assert.strictEqual(result, 'import \'src/apexcss/apex.css\';\n');
+      assert.strictEqual(result, CASCADE_LAYER_IMPORTS);
     });
 
-    it('should remove leading ./ from outputDir', () => {
+    it('should ignore outputDir for cascade layer imports', () => {
       const result = getImportStatement('react', './dist');
-      assert.strictEqual(result, 'import \'./dist/apex.css\';\n');
+      assert.strictEqual(result, CASCADE_LAYER_IMPORTS);
     });
   });
 

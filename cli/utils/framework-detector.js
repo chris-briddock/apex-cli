@@ -9,12 +9,13 @@ import { resolve } from 'node:path';
 /**
  * Framework definitions with their detection criteria
  */
-const FRAMEWORKS = {
+export const FRAMEWORKS = {
   next: {
     name: 'Next.js',
     detect: (pkg) => pkg.dependencies?.next || pkg.devDependencies?.next,
-    entryFiles: ['app/globals.css', 'styles/globals.css', 'src/app/globals.css'],
-    importStatement: '@import \'apexcss\';\n',
+    entryFiles: ['src/app/layout.tsx', 'src/app/layout.jsx', 'app/layout.tsx', 'app/layout.jsx'],
+    importStatement: 'import \'apexcss\';\n',
+    cssConfig: '// Import in layout.tsx:\nimport \'apexcss/base\';\nimport \'apexcss/utilities\';\nimport \'apexcss/themes\';\n',
     configFile: 'next.config.js'
   },
   nuxt: {
@@ -27,16 +28,16 @@ const FRAMEWORKS = {
   react: {
     name: 'React',
     detect: (pkg) => pkg.dependencies?.react && !pkg.dependencies?.next,
-    entryFiles: ['src/main.tsx', 'src/main.jsx', 'src/index.tsx', 'src/index.jsx', 'main.tsx', 'main.jsx'],
-    importStatement: 'import \'apexcss\';\n',
-    fallbackFile: 'src/main.tsx'
+    entryFiles: ['src/index.css', 'src/main.css', 'src/styles.css'],
+    importStatement: '@import \'apexcss\';\n',
+    fallbackFile: 'src/index.css'
   },
   vue: {
     name: 'Vue',
     detect: (pkg) => pkg.dependencies?.vue && !pkg.dependencies?.nuxt,
-    entryFiles: ['src/main.ts', 'src/main.js', 'main.ts', 'main.js'],
-    importStatement: 'import \'apexcss\';\n',
-    fallbackFile: 'src/main.ts'
+    entryFiles: ['src/style.css', 'src/styles.css', 'src/main.css'],
+    importStatement: '@import \'apexcss\';\n',
+    fallbackFile: 'src/style.css'
   },
   angular: {
     name: 'Angular',
@@ -48,16 +49,23 @@ const FRAMEWORKS = {
   svelte: {
     name: 'Svelte',
     detect: (pkg) => pkg.dependencies?.svelte || pkg.devDependencies?.svelte,
-    entryFiles: ['src/main.ts', 'src/main.js', 'src/App.svelte', 'src/routes/+layout.svelte'],
-    importStatement: 'import \'apexcss\';\n',
-    fallbackFile: 'src/main.ts'
+    entryFiles: ['src/app.css', 'src/style.css', 'src/styles.css'],
+    importStatement: '@import \'apexcss\';\n',
+    fallbackFile: 'src/app.css'
+  },
+  astro: {
+    name: 'Astro',
+    detect: (pkg) => pkg.dependencies?.astro || pkg.devDependencies?.astro,
+    entryFiles: ['src/styles/global.css', 'src/style.css', 'src/layouts/Layout.astro'],
+    importStatement: '@import \'apexcss\';\n',
+    fallbackFile: 'src/styles/global.css'
   },
   vanilla: {
     name: 'Vanilla/Vite',
     detect: () => true, // Fallback
-    entryFiles: ['main.js', 'main.ts', 'index.js', 'index.ts', 'src/main.js', 'src/main.ts'],
-    importStatement: 'import \'apexcss\';\n',
-    fallbackFile: 'main.js'
+    entryFiles: ['src/style.css', 'src/styles.css', 'style.css', 'styles.css'],
+    importStatement: '@import \'apexcss\';\n',
+    fallbackFile: 'src/style.css'
   }
 };
 
@@ -93,7 +101,7 @@ export function detectFramework(cwd = process.cwd()) {
   }
 
   // Check each framework in order (more specific first)
-  const frameworkOrder = ['next', 'nuxt', 'angular', 'svelte', 'react', 'vue', 'vanilla'];
+  const frameworkOrder = ['next', 'nuxt', 'angular', 'svelte', 'astro', 'react', 'vue', 'vanilla'];
 
   for (const frameworkId of frameworkOrder) {
     const framework = FRAMEWORKS[frameworkId];
@@ -135,6 +143,7 @@ export function getAvailableFrameworks() {
     { id: 'vue', name: 'Vue (Vite)' },
     { id: 'angular', name: 'Angular' },
     { id: 'svelte', name: 'Svelte (Vite)' },
+    { id: 'astro', name: 'Astro' },
     { id: 'vanilla', name: 'Vanilla/Vite' }
   ];
 }
@@ -152,6 +161,7 @@ export function getRecommendedOutputDir(frameworkId) {
     vue: './dist/',
     angular: './dist/',
     svelte: './dist/',
+    astro: './dist/',
     vanilla: './dist/'
   };
 
@@ -171,6 +181,7 @@ export function getFrameworkConfigApproach(frameworkId) {
     vue: { type: 'import', supportsCSSImport: true },
     angular: { type: 'styles', supportsGlobalStyles: true },
     svelte: { type: 'import', supportsCSSImport: true },
+    astro: { type: 'import', supportsCSSImport: true },
     vanilla: { type: 'import', supportsCSSImport: true }
   };
 
