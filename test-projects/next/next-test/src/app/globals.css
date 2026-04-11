@@ -1,5 +1,5 @@
 @layer base, utilities, themes;
 
-@import 'apexcss/base.css' layer(base);
-@import 'apexcss/utilities.css' layer(utilities);
-@import 'apexcss/themes.css' layer(themes);
+@import 'apexcss/base' layer(base);
+@import 'apexcss/utilities' layer(utilities);
+@import 'apexcss/themes' layer(themes);
