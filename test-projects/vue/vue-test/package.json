@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "apexcss": "^0.4.1",
     "vue": "^3.5.32"
   },
   "devDependencies": {

@@ -7,6 +7,7 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadConfig } from '../utils/config-loader.js';
 import { logger } from '../utils/logger.js';
+import * as sass from 'sass';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -228,11 +229,11 @@ export async function buildCommand(options) {
   const entryContent = generateLayerEntry(layers);
   writeFileSync(resolve(tempDir, 'apex-entry.scss'), entryContent);
 
-  // Build using Vite programmatically
+  // Build using Sass compiler
   logger.info('Compiling CSS...');
 
   try {
-    await runViteBuild(tempDir, options, outputDir, layers, scssContent);
+    await runSassBuild(tempDir, options, outputDir, layers, scssContent);
 
     const duration = Date.now() - startTime;
     logger.newline();
@@ -248,7 +249,7 @@ export async function buildCommand(options) {
 }
 
 /**
- * Run Vite build
+ * Run Sass build
  * @param {string} tempDir - Temp directory path
  * @param {object} options - Build options
  * @param {string} outputDir - Output directory path
@@ -256,75 +257,35 @@ export async function buildCommand(options) {
  * @param {string} scssContent - SCSS content
  * @returns {Promise<void>}
  */
-async function runViteBuild(tempDir, options, outputDir, layers, scssContent) {
-  const { build } = await import('vite');
-  const cwd = process.cwd();
+async function runSassBuild(tempDir, options, outputDir, layers, scssContent) {
+  const entryFile = resolve(tempDir, 'apex-entry.scss');
 
-  // Look for postcss config in user's project
-  const userPostcssConfig = resolve(cwd, 'postcss.config.js');
-  const apexcssPostcssConfig = resolve(cwd, 'node_modules', 'apexcss', 'postcss.config.js');
-
-  let postcssConfig;
-  if (existsSync(userPostcssConfig)) {
-    postcssConfig = userPostcssConfig;
-  } else if (existsSync(apexcssPostcssConfig)) {
-    postcssConfig = apexcssPostcssConfig;
-  } else {
-    postcssConfig = undefined;
-  }
-
-  await build({
-    configFile: false,
-    css: {
-      postcss: postcssConfig
-    },
-    build: {
-      cssCodeSplit: false,
-      sourcemap: options.sourcemap,
-      minify: options.minify ? 'esbuild' : false,
-      outDir: tempDir,
-      rollupOptions: {
-        input: {
-          apex: resolve(tempDir, 'apex-entry.scss')
-        },
-        output: {
-          entryFileNames: '[name].js',
-          assetFileNames: () => '[name][extname]'
-        }
-      }
-    }
+  // Compile SCSS to CSS using Sass
+  const result = sass.compile(entryFile, {
+    loadPaths: [tempDir],
+    sourceMap: options.sourcemap,
+    style: options.minify ? 'compressed' : 'expanded'
   });
 
   // Get output filenames based on layers
   const { filename, description } = getOutputFilenames(layers);
 
-  // Copy CSS from temp to output
-  const generatedCssPath = findGeneratedCss(tempDir);
+  // Write CSS output
   const finalCssPath = resolve(outputDir, `${filename}.css`);
-
-  if (!generatedCssPath) {
-    throw new Error('CSS file was not generated');
-  }
-
-  const cssContent = readFileSync(generatedCssPath, 'utf-8');
-  writeFileSync(finalCssPath, cssContent);
+  writeFileSync(finalCssPath, result.css);
 
   // Calculate file size
-  const contentBytes = Buffer.byteLength(cssContent, 'utf8');
+  const contentBytes = Buffer.byteLength(result.css, 'utf8');
   const sizeKB = (contentBytes / 1024).toFixed(2);
 
   const filePath = logger.path(`${filename}.css`);
   logger.success(`Built: ${filePath} (${sizeKB} KB) [${description}]`);
 
-  // Copy source map if generated
-  if (options.sourcemap) {
-    const mapSource = resolve(tempDir, 'apex.css.map');
+  // Write source map if generated
+  if (options.sourcemap && result.sourceMap) {
     const mapDest = resolve(outputDir, `${filename}.css.map`);
-    if (existsSync(mapSource)) {
-      const mapContent = readFileSync(mapSource, 'utf-8');
-      writeFileSync(mapDest, mapContent);
-      logger.success('Source map generated');
-    }
+    writeFileSync(mapDest, JSON.stringify(result.sourceMap));
+    logger.success('Source map generated');
   }
 
   // Output SCSS if requested
