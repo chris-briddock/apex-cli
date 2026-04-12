@@ -16,7 +16,7 @@
     "registry": "https://registry.npmjs.org/"
   },
   "bin": {
-    "apexcss": "bin/apexcss.js"
+    "apexcss": "bin/apexcss-cli.js"
   },
   "scripts": {
     "test": "node tests/run-tests.js",
@@ -27,8 +27,8 @@
     "test:coverage:html": "c8 --reporter=html node tests/run-tests.js",
     "lint": "eslint cli/ bin/ tests/",
     "lint:fix": "eslint cli/ bin/ tests/ --fix",
-    "doctor": "node bin/apexcss.js doctor",
-    "version": "node bin/apexcss.js --version",
+    "doctor": "node bin/apexcss-cli.js doctor",
+    "version": "node bin/apexcss-cli.js --version",
     "prepublishOnly": "echo \"Preparing for publish...\""
   },
   "keywords": [
