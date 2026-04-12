@@ -31,9 +31,9 @@ describe('init command', () => {
 @import 'apexcss/themes' layer(themes);
 `;
 
-    it('should return Next.js import statement with JS imports', () => {
+    it('should return Next.js import statement with cascade layers', () => {
       const result = getImportStatement('next', './src/apexcss');
-      assert.strictEqual(result, 'import \'apexcss/base\';\nimport \'apexcss/utilities\';\nimport \'apexcss/themes\';\n');
+      assert.strictEqual(result, CASCADE_LAYER_IMPORTS);
     });
 
     it('should return React import statement with cascade layers', () => {
@@ -61,7 +61,7 @@ describe('init command', () => {
       assert.strictEqual(result, CASCADE_LAYER_IMPORTS);
     });
 
-    it('should return Nuxt config comment with apexcss imports', () => {
+    it('should return Nuxt config comment with apexcss layer imports', () => {
       const result = getImportStatement('nuxt', './src/apexcss');
       assert.ok(result.includes('nuxt.config.ts'));
       assert.ok(result.includes('apexcss/base'));

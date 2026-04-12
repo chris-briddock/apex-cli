@@ -155,17 +155,17 @@ describe('framework-detector', () => {
   });
 
   describe('getRecommendedOutputDir', () => {
-    it('should return dist directory for all frameworks', () => {
+    it('should return node_modules/apexcss/dist for all frameworks', () => {
       const frameworks = ['next', 'nuxt', 'react', 'vue', 'angular', 'svelte', 'vanilla'];
       frameworks.forEach(fw => {
         const dir = getRecommendedOutputDir(fw);
-        assert.strictEqual(dir, './dist/');
+        assert.strictEqual(dir, 'node_modules/apexcss/dist');
       });
     });
 
     it('should return default for unknown framework', () => {
       const dir = getRecommendedOutputDir('unknown');
-      assert.strictEqual(dir, './dist/');
+      assert.strictEqual(dir, 'node_modules/apexcss/dist');
     });
   });
 

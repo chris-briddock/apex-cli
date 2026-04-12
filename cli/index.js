@@ -33,7 +33,7 @@ export function cli(args) {
   // Global options
   program
     .option('-c, --config <path>', 'path to config file', './apex.config.js')
-    .option('-o, --output <dir>', 'output directory', './dist/')
+    .option('-o, --output <dir>', 'output directory', 'node_modules/apexcss/dist')
     .option('--minify', 'minify output CSS', false)
     .option('--sourcemap', 'generate source maps', false);
 
@@ -41,8 +41,7 @@ export function cli(args) {
   program
     .command('init')
     .description('Initialize ApexCSS configuration in your project')
-    .option('-f, --framework <name>', 'specify framework (react, vue, angular, svelte, astro, next, nuxt, vanilla, astro)')
-    .option('--no-interactive', 'skip interactive prompts')
+    .option('-f, --framework <name>', 'specify framework (react, vue, angular, svelte, astro, next, nuxt, vanilla)')
     .option('--no-import', 'skip adding imports to entry files')
     .action(async (options) => {
       try {
@@ -50,7 +49,6 @@ export function cli(args) {
           configPath: program.opts().config,
           outputDir: program.opts().output,
           framework: options.framework,
-          interactive: options.interactive,
           addImport: options.import
         });
       } catch (error) {
