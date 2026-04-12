@@ -1,20 +1,21 @@
 /**
  * Build command tests
  */
-import { describe, it, beforeEach, afterEach } from 'node:test';
+
 import assert from 'node:assert';
-import { mkdtempSync, writeFileSync, rmSync, existsSync, mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { afterEach, beforeEach, describe, it } from 'node:test';
 import {
-  parseLayers,
+  copySourceMap,
+  determineSourceDir,
+  findGeneratedCss,
   generateLayerEntry,
   getSourceEntriesForLayers,
+  parseLayers,
   setupBuildEnvironment,
-  determineSourceDir,
-  writeConfigFiles,
-  findGeneratedCss,
-  copySourceMap
+  writeConfigFiles
 } from '../../../cli/commands/build.js';
 
 describe('build command', () => {
@@ -61,9 +62,9 @@ describe('build command', () => {
   describe('generateLayerEntry', () => {
     it('should generate entry with all layers', () => {
       const result = generateLayerEntry(['base', 'utilities']);
-      assert.ok(result.includes('@use \'config\';'));
-      assert.ok(result.includes('@use \'base\';'));
-      assert.ok(result.includes('@use \'utilities\';'));
+      assert.ok(result.includes("@use 'config';"));
+      assert.ok(result.includes("@use 'base';"));
+      assert.ok(result.includes("@use 'utilities';"));
     });
 
     it('should include header and footer comments', () => {
@@ -136,14 +137,18 @@ describe('build command', () => {
   describe('writeConfigFiles', () => {
     it('should write config files', () => {
       const testTempDir = join(process.cwd(), 'test-temp');
+      const testOutputDir = join(process.cwd(), 'test-output');
       mkdirSync(testTempDir, { recursive: true });
+      mkdirSync(testOutputDir, { recursive: true });
 
-      writeConfigFiles(testTempDir, '$test: true;');
+      writeConfigFiles(testTempDir, testOutputDir, '$test: true;');
 
       const configDir = join(testTempDir, 'config');
       assert.ok(existsSync(configDir));
       assert.ok(existsSync(join(configDir, '_custom-config.scss')));
       assert.ok(existsSync(join(configDir, '_index.scss')));
+      // Also verify _custom-config.scss is written to output directory
+      assert.ok(existsSync(join(testOutputDir, '_custom-config.scss')));
     });
   });
 

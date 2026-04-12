@@ -1,11 +1,12 @@
 /**
  * Doctor command tests
  */
-import { describe, it, beforeEach, afterEach } from 'node:test';
+
 import assert from 'node:assert';
-import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { afterEach, beforeEach, describe, it } from 'node:test';
 
 describe('doctor command', () => {
   let tempDir;
@@ -18,7 +19,7 @@ describe('doctor command', () => {
 
     // Mock process.exit
     const originalExit = process.exit;
-    process.exit = (code) => {
+    process.exit = code => {
       throw new Error(`EXIT_${code}`);
     };
     process.exit.original = originalExit;
@@ -75,11 +76,14 @@ describe('doctor command', () => {
     });
 
     it('should handle package.json with apexcss', async () => {
-      writeFileSync(join(tempDir, 'package.json'), JSON.stringify({
-        dependencies: {
-          apexcss: '0.3.0'
-        }
-      }));
+      writeFileSync(
+        join(tempDir, 'package.json'),
+        JSON.stringify({
+          dependencies: {
+            apexcss: '0.3.0'
+          }
+        })
+      );
 
       const { doctorCommand } = await import('../../../cli/commands/doctor.js');
 
@@ -95,9 +99,12 @@ describe('doctor command', () => {
     });
 
     it('should detect config file', async () => {
-      writeFileSync(join(tempDir, 'package.json'), JSON.stringify({
-        dependencies: { apexcss: '0.3.0' }
-      }));
+      writeFileSync(
+        join(tempDir, 'package.json'),
+        JSON.stringify({
+          dependencies: { apexcss: '0.3.0' }
+        })
+      );
       writeFileSync(join(tempDir, 'apex.config.js'), 'export default {};');
 
       const { doctorCommand } = await import('../../../cli/commands/doctor.js');
@@ -114,11 +121,14 @@ describe('doctor command', () => {
     });
 
     it('should detect Vite as build tool', async () => {
-      writeFileSync(join(tempDir, 'package.json'), JSON.stringify({
-        devDependencies: {
-          vite: '5.0.0'
-        }
-      }));
+      writeFileSync(
+        join(tempDir, 'package.json'),
+        JSON.stringify({
+          devDependencies: {
+            vite: '5.0.0'
+          }
+        })
+      );
 
       const { doctorCommand } = await import('../../../cli/commands/doctor.js');
 
@@ -134,11 +144,14 @@ describe('doctor command', () => {
     });
 
     it('should detect framework from package.json', async () => {
-      writeFileSync(join(tempDir, 'package.json'), JSON.stringify({
-        dependencies: {
-          react: '18.0.0'
-        }
-      }));
+      writeFileSync(
+        join(tempDir, 'package.json'),
+        JSON.stringify({
+          dependencies: {
+            react: '18.0.0'
+          }
+        })
+      );
 
       const { doctorCommand } = await import('../../../cli/commands/doctor.js');
 

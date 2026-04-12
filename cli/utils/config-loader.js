@@ -3,10 +3,10 @@
  * Loads and validates user configuration files
  */
 
-import { readFileSync, existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { createRequire } from 'node:module';
 import { logger } from './logger.js';
 
 /**
@@ -93,57 +93,130 @@ export const defaultConfig = {
       hue: 250,
       chroma: 0.18,
       lightnessScale: {
-        50: 95, 100: 90, 200: 85, 300: 78, 400: 70,
-        500: 62, 600: 55, 700: 45, 800: 35, 900: 25, 950: 20
+        50: 95,
+        100: 90,
+        200: 85,
+        300: 78,
+        400: 70,
+        500: 62,
+        600: 55,
+        700: 45,
+        800: 35,
+        900: 25,
+        950: 20
       }
     },
     gray: {
       hue: 250,
       chroma: 0.02,
       lightnessScale: {
-        50: 96, 100: 90, 200: 85, 300: 78, 400: 70,
-        500: 65, 600: 55, 700: 45, 800: 35, 900: 25, 950: 18
+        50: 96,
+        100: 90,
+        200: 85,
+        300: 78,
+        400: 70,
+        500: 65,
+        600: 55,
+        700: 45,
+        800: 35,
+        900: 25,
+        950: 18
       }
     },
     success: {
       hue: 145,
       chroma: 0.2,
       lightnessScale: {
-        50: 95, 100: 90, 200: 85, 300: 78, 400: 70,
-        500: 62, 600: 55, 700: 45, 800: 35, 900: 25, 950: 20
+        50: 95,
+        100: 90,
+        200: 85,
+        300: 78,
+        400: 70,
+        500: 62,
+        600: 55,
+        700: 45,
+        800: 35,
+        900: 25,
+        950: 20
       }
     },
     warning: {
       hue: 80,
       chroma: 0.16,
       lightnessScale: {
-        50: 95, 100: 90, 200: 85, 300: 78, 400: 70,
-        500: 72, 600: 60, 700: 50, 800: 40, 900: 30, 950: 25
+        50: 95,
+        100: 90,
+        200: 85,
+        300: 78,
+        400: 70,
+        500: 72,
+        600: 60,
+        700: 50,
+        800: 40,
+        900: 30,
+        950: 25
       }
     },
     danger: {
       hue: 25,
       chroma: 0.22,
       lightnessScale: {
-        50: 95, 100: 90, 200: 85, 300: 78, 400: 70,
-        500: 62, 600: 55, 700: 45, 800: 35, 900: 25, 950: 20
+        50: 95,
+        100: 90,
+        200: 85,
+        300: 78,
+        400: 70,
+        500: 62,
+        600: 55,
+        700: 45,
+        800: 35,
+        900: 25,
+        950: 20
       }
     },
     info: {
       hue: 220,
       chroma: 0.14,
       lightnessScale: {
-        50: 95, 100: 90, 200: 85, 300: 78, 400: 70,
-        500: 62, 600: 55, 700: 45, 800: 35, 900: 25, 950: 20
+        50: 95,
+        100: 90,
+        200: 85,
+        300: 78,
+        400: 70,
+        500: 62,
+        600: 55,
+        700: 45,
+        800: 35,
+        900: 25,
+        950: 20
       }
     }
   },
 
   typography: {
     fontFamily: {
-      sans: ['ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+      sans: [
+        'ui-sans-serif',
+        'system-ui',
+        '-apple-system',
+        'BlinkMacSystemFont',
+        'Segoe UI',
+        'Roboto',
+        'Helvetica Neue',
+        'Arial',
+        'sans-serif'
+      ],
       serif: ['ui-serif', 'Georgia', 'Cambria', 'Times New Roman', 'Times', 'serif'],
-      mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', 'monospace']
+      mono: [
+        'ui-monospace',
+        'SFMono-Regular',
+        'Menlo',
+        'Monaco',
+        'Consolas',
+        'Liberation Mono',
+        'Courier New',
+        'monospace'
+      ]
     },
     fontSize: {
       xs: ['0.75rem', { lineHeight: '1rem' }],

@@ -1,6 +1,6 @@
 # @apexcss/cli
 
-ApexCSS CLI - A powerful build tool for with automatic framework detection and seamless integration.
+ApexCSS CLI - A powerful build tool with automatic framework detection and seamless integration.
 
 ## What is ApexCSS CLI?
 
@@ -15,22 +15,22 @@ ApexCSS CLI helps you build and customize your own CSS utility framework. It pro
 ## Installation
 
 ```bash
-npm install -g @apexcss/cli
+npm install -g apexcss-cli
 # or use without installing
-npx @apexcss/cli <command>
+(recommended) npx apexcss-cli <command>
 ```
 
 ## Quick Start
 
 ```bash
 # 1. Initialize with automatic framework detection
-apexcss init
+apexcss-cli init
 
 # 2. Build your CSS
-apexcss build
+apexcss-cli build
 
 # 3. During development, watch for changes
-apexcss watch
+apexcss-cli watch
 ```
 
 ## Automatic Framework Detection
@@ -48,63 +48,63 @@ ApexCSS CLI automatically detects your project framework and configures the inte
 | Nuxt | `nuxt` in dependencies | ✅ Instructions for nuxt.config.ts |
 | Vanilla | Default fallback | ✅ Added to main.js/ts |
 
-Run `apexcss doctor` to see what was detected in your project.
+Run `apexcss-cli doctor` to see what was detected in your project.
 
 ## Usage
 
 ### Initialize Configuration
 
 ```bash
-# Interactive mode with prompts
-apexcss init
-
-# Skip interactive prompts
-apexcss init --interactive=false
+# Interactive mode with prompts (default)
+apexcss-cli init
 
 # Specify framework explicitly
-apexcss init --framework=react
+apexcss-cli init --framework=react
 
 # Custom output directory
-apexcss init --output=./src/styles
+apexcss-cli init --output=./src/styles
+
+# Skip adding imports to entry files
+apexcss-cli init --no-import
 ```
 
 ### Build CSS
 
 ```bash
 # Build complete CSS (base + utilities + themes)
-apexcss build
+apexcss-cli build
 
 # Build specific layers only
-apexcss build --layer base
-apexcss build --layer utilities
-apexcss build --layer themes
-apexcss build --layer base,themes
+apexcss-cli build --layer base
+apexcss-cli build --layer utilities
+apexcss-cli build --layer themes
+apexcss-cli build --layer base,themes
 
 # Production build with minification
-apexcss build --minify
+apexcss-cli build --minify
 
 # Generate source maps
-apexcss build --sourcemap
+apexcss-cli build --sourcemap
 
 # Output as SCSS instead of CSS
-apexcss build --format=scss
+apexcss-cli build --format=scss
 ```
 
 ### Watch Mode
 
 ```bash
 # Watch config file for changes and auto-rebuild
-apexcss watch
+apexcss-cli watch
 
 # Watch with custom config path
-apexcss watch --config=./custom.config.js
+apexcss-cli watch --config=./custom.config.js
 ```
 
 ### Diagnostics
 
 ```bash
 # Run system diagnostics
-apexcss doctor
+apexcss-cli doctor
 ```
 
 ## CLI Options
@@ -112,14 +112,23 @@ apexcss doctor
 | Option | Description | Default |
 |--------|-------------|---------|
 | `-c, --config <path>` | Config file path | `./apex.config.js` |
-| `-o, --output <dir>` | Output directory | `./dist/` |
-| `-l, --layer <layers>` | Build specific layers | `all` |
+| `-o, --output <dir>` | Output directory | `node_modules/apexcss/dist` |
 | `--minify` | Minify output CSS | `false` |
 | `--sourcemap` | Generate source maps | `false` |
-| `--format <format>` | Output format | `css` |
-| `--framework` | Specify framework | `auto-detect` |
-| `--interactive` | Interactive prompts | `true` |
-| `--import` | Add imports to entry files | `true` |
+
+### Command-Specific Options
+
+**`init` command:**
+| Option | Description |
+|--------|-------------|
+| `-f, --framework <name>` | Specify framework (react, vue, angular, svelte, astro, next, nuxt, vanilla) |
+| `--no-import` | Skip adding imports to entry files |
+
+**`build` command:**
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--format <format>` | Output format (css, scss) | `css` |
+| `-l, --layer <layers>` | Build specific layers (base, utilities, themes, all) | `all` |
 
 ## Configuration
 
@@ -186,17 +195,27 @@ export default {
 };
 ```
 
-## Peer Dependencies
+## Dependencies
 
-This CLI requires `apexcss` to be installed in your project:
+### Required
+- `apexcss` - The core CSS framework (peer dependency)
+
+### Bundled
+- `chalk` - Terminal styling
+- `commander` - CLI framework
+- `sass` - Sass compiler (embedded)
+
+### Optional
+- `chokidar` - File watching (for `watch` command)
+- `inquirer` - Interactive prompts (for `init` command)
 
 ```bash
-npm install apexcss
-```
+# Install the CLI
+npm install -g apexcss-cli
 
-Optional peer dependencies:
-- `vite` - For building CSS (recommended)
-- `sass` - For SCSS support
+# Or install locally with the core framework
+npm install apexcss apexcss-cli
+```
 
 ## Development
 
@@ -237,11 +256,23 @@ npm run test:unit
 ### Code Quality
 
 ```bash
-# Run ESLint
+# Run Biome linter
 npm run lint
 
-# Fix auto-fixable linting issues
+# Fix auto-fixable issues
 npm run lint:fix
+
+# Run Biome formatter
+npm run format
+
+# Fix formatting
+npm run format:fix
+
+# Run all checks (lint + format)
+npm run check
+
+# Fix all auto-fixable issues
+npm run check:fix
 ```
 
 ### Coverage Summary
@@ -262,19 +293,19 @@ Current test coverage:
 
 ## How It Works
 
-1. **Initialization** (`apexcss init`):
+1. **Initialization** (`apexcss-cli init`):
    - Detects your project framework from package.json
    - Creates a starter config file (apex.config.js)
    - Optionally adds CSS import to your framework's entry file
    - Sets up .gitignore for output directory
 
-2. **Build Process** (`apexcss build`):
+2. **Build Process** (`apexcss-cli build`):
    - Reads your configuration
    - Generates SCSS based on enabled features
-   - Uses Vite to compile CSS (if available)
+   - Uses the embedded Sass compiler to build CSS
    - Outputs minified CSS (with optional source maps)
 
-3. **Watch Mode** (`apexcss watch`):
+3. **Watch Mode** (`apexcss-cli watch`):
    - Monitors your config file for changes
    - Automatically rebuilds on change
    - Handles concurrent changes gracefully

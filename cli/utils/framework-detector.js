@@ -3,7 +3,7 @@
  * Detects which framework the user's project is using
  */
 
-import { readFileSync, existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 /**
@@ -12,61 +12,62 @@ import { resolve } from 'node:path';
 export const FRAMEWORKS = {
   next: {
     name: 'Next.js',
-    detect: (pkg) => pkg.dependencies?.next || pkg.devDependencies?.next,
+    detect: pkg => pkg.dependencies?.next || pkg.devDependencies?.next,
     entryFiles: ['src/app/globals.css', 'app/globals.css', 'src/styles/globals.css', 'styles/globals.css'],
-    importStatement: '@import \'apexcss\';\n',
-    cssConfig: '// Add to globals.css:\n@import \'apexcss/base\';\n@import \'apexcss/utilities\';\n@import \'apexcss/themes\';\n',
+    importStatement: "@import 'apexcss';\n",
+    cssConfig:
+      "// Add to globals.css:\n@import 'apexcss/base';\n@import 'apexcss/utilities';\n@import 'apexcss/themes';\n",
     configFile: 'next.config.js',
     fallbackFile: 'src/app/globals.css'
   },
   nuxt: {
     name: 'Nuxt',
-    detect: (pkg) => pkg.dependencies?.nuxt || pkg.devDependencies?.nuxt,
+    detect: pkg => pkg.dependencies?.nuxt || pkg.devDependencies?.nuxt,
     entryFiles: ['nuxt.config.ts', 'nuxt.config.js'],
-    cssConfig: 'css: [\'~/apexcss/apex.css\']',
+    cssConfig: "css: ['~/apexcss/apex.css']",
     importStatement: null // Nuxt uses CSS config in nuxt.config
   },
   react: {
     name: 'React',
-    detect: (pkg) => pkg.dependencies?.react && !pkg.dependencies?.next,
+    detect: pkg => pkg.dependencies?.react && !pkg.dependencies?.next,
     entryFiles: ['src/index.css', 'src/main.css', 'src/styles.css'],
-    importStatement: '@import \'apexcss\';\n',
+    importStatement: "@import 'apexcss';\n",
     fallbackFile: 'src/index.css'
   },
   vue: {
     name: 'Vue',
-    detect: (pkg) => pkg.dependencies?.vue && !pkg.dependencies?.nuxt,
+    detect: pkg => pkg.dependencies?.vue && !pkg.dependencies?.nuxt,
     entryFiles: ['src/style.css', 'src/styles.css', 'src/main.css'],
-    importStatement: '@import \'apexcss\';\n',
+    importStatement: "@import 'apexcss';\n",
     fallbackFile: 'src/style.css'
   },
   angular: {
     name: 'Angular',
-    detect: (pkg) => pkg.dependencies?.['@angular/core'],
+    detect: pkg => pkg.dependencies?.['@angular/core'],
     entryFiles: ['src/styles.css', 'src/styles.scss', 'angular.json'],
-    importStatement: '@import \'apexcss\';\n',
+    importStatement: "@import 'apexcss';\n",
     configFile: 'angular.json',
     fallbackFile: 'src/styles.css'
   },
   svelte: {
     name: 'Svelte',
-    detect: (pkg) => pkg.dependencies?.svelte || pkg.devDependencies?.svelte,
+    detect: pkg => pkg.dependencies?.svelte || pkg.devDependencies?.svelte,
     entryFiles: ['src/app.css', 'src/style.css', 'src/styles.css'],
-    importStatement: '@import \'apexcss\';\n',
+    importStatement: "@import 'apexcss';\n",
     fallbackFile: 'src/app.css'
   },
   astro: {
     name: 'Astro',
-    detect: (pkg) => pkg.dependencies?.astro || pkg.devDependencies?.astro,
+    detect: pkg => pkg.dependencies?.astro || pkg.devDependencies?.astro,
     entryFiles: ['src/styles/global.css', 'src/style.css', 'src/layouts/Layout.astro'],
-    importStatement: '@import \'apexcss\';\n',
+    importStatement: "@import 'apexcss';\n",
     fallbackFile: 'src/styles/global.css'
   },
   vanilla: {
     name: 'Vanilla/Vite',
     detect: () => true, // Fallback
     entryFiles: ['src/style.css', 'src/styles.css', 'style.css', 'styles.css'],
-    importStatement: '@import \'apexcss\';\n',
+    importStatement: "@import 'apexcss';\n",
     fallbackFile: 'src/style.css'
   }
 };
@@ -109,9 +110,7 @@ export function detectFramework(cwd = process.cwd()) {
     const framework = FRAMEWORKS[frameworkId];
     if (framework.detect(pkg)) {
       // Find the actual entry file that exists
-      const existingEntry = framework.entryFiles.find(file =>
-        existsSync(resolve(cwd, file))
-      );
+      const existingEntry = framework.entryFiles.find(file => existsSync(resolve(cwd, file)));
 
       return {
         id: frameworkId,

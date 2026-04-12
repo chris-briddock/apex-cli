@@ -1,8 +1,9 @@
 /**
  * Logger utility tests
  */
-import { describe, it, beforeEach, afterEach } from 'node:test';
+
 import assert from 'node:assert';
+import { afterEach, beforeEach, describe, it } from 'node:test';
 import { logger } from '../../../cli/utils/logger.js';
 
 describe('logger', () => {

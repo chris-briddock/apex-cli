@@ -2,15 +2,11 @@
  * Build command - Generate custom CSS from configuration
  */
 
-import { writeFileSync, existsSync, mkdirSync, cpSync, rmSync, readFileSync } from 'node:fs';
-import { resolve, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import * as sass from 'sass';
 import { loadConfig } from '../utils/config-loader.js';
 import { logger } from '../utils/logger.js';
-import * as sass from 'sass';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 // Import the config builder
 import { generateSCSS } from '../utils/config-builder.js';
@@ -56,14 +52,20 @@ export function generateLayerEntry(layers) {
   ];
 
   // Always include config
-  lines.push('@use \'config\';');
+  lines.push("@use 'config';");
 
   // Include selected layers
   for (const layer of layers) {
     lines.push(`@use '${layer}';`);
   }
 
-  lines.push('', '// ============================================================================', '// End of Entry Point', '// ============================================================================', '');
+  lines.push(
+    '',
+    '// ============================================================================',
+    '// End of Entry Point',
+    '// ============================================================================',
+    ''
+  );
 
   return lines.join('\n');
 }
@@ -79,16 +81,16 @@ export function getSourceEntriesForLayers(layers) {
   for (const layer of layers) {
     entries.add(layer);
     switch (layer) {
-    case 'utilities':
-      entries.add('mixins');
-      entries.add('plugins');
-      break;
-    case 'base':
-      entries.add('mixins');
-      break;
-    case 'themes':
-      entries.add('mixins');
-      break;
+      case 'utilities':
+        entries.add('mixins');
+        entries.add('plugins');
+        break;
+      case 'base':
+        entries.add('mixins');
+        break;
+      case 'themes':
+        entries.add('mixins');
+        break;
     }
   }
 
@@ -120,8 +122,7 @@ export function determineSourceDir(cwd) {
 
   if (!existsSync(nodeModulesSrcDir)) {
     throw new Error(
-      'Could not find ApexCSS source files. ' +
-      'Please ensure apexcss is installed: npm install apexcss'
+      'Could not find ApexCSS source files. ' + 'Please ensure apexcss is installed: npm install apexcss'
     );
   }
 
@@ -129,18 +130,19 @@ export function determineSourceDir(cwd) {
 }
 
 /**
- * Write configuration files to temp directory
+ * Write configuration files to temp directory and output directory
  * @param {string} tempDir - Temp directory path
+ * @param {string} outputDir - Output directory path
  * @param {string} scssContent - SCSS content to write
  */
-export function writeConfigFiles(tempDir, scssContent) {
+export function writeConfigFiles(tempDir, outputDir, scssContent) {
   const configDir = resolve(tempDir, 'config');
   mkdirSync(configDir, { recursive: true });
   writeFileSync(resolve(configDir, '_custom-config.scss'), scssContent);
-  writeFileSync(
-    resolve(configDir, '_index.scss'),
-    '// Auto-generated config entry\n@forward \'custom-config\';\n'
-  );
+  writeFileSync(resolve(configDir, '_index.scss'), "// Auto-generated config entry\n@forward 'custom-config';\n");
+
+  // Also write _custom-config.scss to output directory for user reference
+  writeFileSync(resolve(outputDir, '_custom-config.scss'), scssContent);
 }
 
 /**
@@ -206,8 +208,7 @@ export async function buildCommand(options) {
 
   if (!existsSync(sourceDir)) {
     throw new Error(
-      'Could not find ApexCSS source files. ' +
-      'Please ensure apexcss is installed: npm install apexcss'
+      'Could not find ApexCSS source files. ' + 'Please ensure apexcss is installed: npm install apexcss'
     );
   }
 
@@ -223,11 +224,20 @@ export async function buildCommand(options) {
   copySourceFiles(sourceDir, tempDir, layers);
 
   // Write custom config
-  writeConfigFiles(tempDir, scssContent);
+  writeConfigFiles(tempDir, outputDir, scssContent);
 
-  // Generate layer-specific entry file
+  // Generate entry files for combined build
   const entryContent = generateLayerEntry(layers);
   writeFileSync(resolve(tempDir, 'apex-entry.scss'), entryContent);
+
+  // Generate individual layer entry files for per-layer builds
+  const allLayers = ['base', 'utilities', 'themes'];
+  for (const layer of allLayers) {
+    if (layers.includes(layer)) {
+      const layerEntryContent = generateLayerEntry([layer]);
+      writeFileSync(resolve(tempDir, `${layer}.scss`), layerEntryContent);
+    }
+  }
 
   // Build using Sass compiler
   logger.info('Compiling CSS...');
@@ -238,7 +248,6 @@ export async function buildCommand(options) {
     const duration = Date.now() - startTime;
     logger.newline();
     logger.success(`Build completed in ${duration}ms`);
-
   } catch (error) {
     // Clean up temp directory on error
     if (existsSync(tempDir)) {

@@ -1,16 +1,17 @@
 /**
  * Framework detector tests
  */
-import { describe, it, beforeEach, afterEach } from 'node:test';
+
 import assert from 'node:assert';
-import { mkdtempSync, writeFileSync, rmSync, mkdirSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { afterEach, beforeEach, describe, it } from 'node:test';
 import {
   detectFramework,
   getAvailableFrameworks,
-  getRecommendedOutputDir,
-  getFrameworkConfigApproach
+  getFrameworkConfigApproach,
+  getRecommendedOutputDir
 } from '../../../cli/utils/framework-detector.js';
 
 describe('framework-detector', () => {
@@ -37,9 +38,12 @@ describe('framework-detector', () => {
     });
 
     it('should detect Next.js', () => {
-      writeFileSync(join(tempDir, 'package.json'), JSON.stringify({
-        dependencies: { next: '14.0.0' }
-      }));
+      writeFileSync(
+        join(tempDir, 'package.json'),
+        JSON.stringify({
+          dependencies: { next: '14.0.0' }
+        })
+      );
       const result = detectFramework(tempDir);
       assert.strictEqual(result.id, 'next');
       assert.strictEqual(result.detected, true);
@@ -47,9 +51,12 @@ describe('framework-detector', () => {
     });
 
     it('should detect Nuxt', () => {
-      writeFileSync(join(tempDir, 'package.json'), JSON.stringify({
-        dependencies: { nuxt: '3.0.0' }
-      }));
+      writeFileSync(
+        join(tempDir, 'package.json'),
+        JSON.stringify({
+          dependencies: { nuxt: '3.0.0' }
+        })
+      );
       const result = detectFramework(tempDir);
       assert.strictEqual(result.id, 'nuxt');
       assert.strictEqual(result.detected, true);
@@ -57,9 +64,12 @@ describe('framework-detector', () => {
     });
 
     it('should detect React', () => {
-      writeFileSync(join(tempDir, 'package.json'), JSON.stringify({
-        dependencies: { react: '18.0.0' }
-      }));
+      writeFileSync(
+        join(tempDir, 'package.json'),
+        JSON.stringify({
+          dependencies: { react: '18.0.0' }
+        })
+      );
       const result = detectFramework(tempDir);
       assert.strictEqual(result.id, 'react');
       assert.strictEqual(result.detected, true);
@@ -67,9 +77,12 @@ describe('framework-detector', () => {
     });
 
     it('should detect Vue', () => {
-      writeFileSync(join(tempDir, 'package.json'), JSON.stringify({
-        dependencies: { vue: '3.0.0' }
-      }));
+      writeFileSync(
+        join(tempDir, 'package.json'),
+        JSON.stringify({
+          dependencies: { vue: '3.0.0' }
+        })
+      );
       const result = detectFramework(tempDir);
       assert.strictEqual(result.id, 'vue');
       assert.strictEqual(result.detected, true);
@@ -77,9 +90,12 @@ describe('framework-detector', () => {
     });
 
     it('should detect Angular', () => {
-      writeFileSync(join(tempDir, 'package.json'), JSON.stringify({
-        dependencies: { '@angular/core': '15.0.0' }
-      }));
+      writeFileSync(
+        join(tempDir, 'package.json'),
+        JSON.stringify({
+          dependencies: { '@angular/core': '15.0.0' }
+        })
+      );
       const result = detectFramework(tempDir);
       assert.strictEqual(result.id, 'angular');
       assert.strictEqual(result.detected, true);
@@ -87,9 +103,12 @@ describe('framework-detector', () => {
     });
 
     it('should detect Svelte', () => {
-      writeFileSync(join(tempDir, 'package.json'), JSON.stringify({
-        dependencies: { svelte: '4.0.0' }
-      }));
+      writeFileSync(
+        join(tempDir, 'package.json'),
+        JSON.stringify({
+          dependencies: { svelte: '4.0.0' }
+        })
+      );
       const result = detectFramework(tempDir);
       assert.strictEqual(result.id, 'svelte');
       assert.strictEqual(result.detected, true);
@@ -97,17 +116,23 @@ describe('framework-detector', () => {
     });
 
     it('should prefer Next.js over React', () => {
-      writeFileSync(join(tempDir, 'package.json'), JSON.stringify({
-        dependencies: { react: '18.0.0', next: '14.0.0' }
-      }));
+      writeFileSync(
+        join(tempDir, 'package.json'),
+        JSON.stringify({
+          dependencies: { react: '18.0.0', next: '14.0.0' }
+        })
+      );
       const result = detectFramework(tempDir);
       assert.strictEqual(result.id, 'next');
     });
 
     it('should prefer Nuxt over Vue', () => {
-      writeFileSync(join(tempDir, 'package.json'), JSON.stringify({
-        dependencies: { vue: '3.0.0', nuxt: '3.0.0' }
-      }));
+      writeFileSync(
+        join(tempDir, 'package.json'),
+        JSON.stringify({
+          dependencies: { vue: '3.0.0', nuxt: '3.0.0' }
+        })
+      );
       const result = detectFramework(tempDir);
       assert.strictEqual(result.id, 'nuxt');
     });
@@ -120,9 +145,12 @@ describe('framework-detector', () => {
     });
 
     it('should detect existing entry file', () => {
-      writeFileSync(join(tempDir, 'package.json'), JSON.stringify({
-        dependencies: { react: '18.0.0' }
-      }));
+      writeFileSync(
+        join(tempDir, 'package.json'),
+        JSON.stringify({
+          dependencies: { react: '18.0.0' }
+        })
+      );
 
       // Create src directory and index.css (CSS files are now primary entry points)
       const srcDir = join(tempDir, 'src');

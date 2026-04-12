@@ -1,9 +1,10 @@
 /**
  * Watch command tests
  */
-import { describe, it, beforeEach } from 'node:test';
+
 import assert from 'node:assert';
-import { WatchBuildState, performWatchBuild } from '../../../cli/commands/watch.js';
+import { beforeEach, describe, it } from 'node:test';
+import { performWatchBuild, WatchBuildState } from '../../../cli/commands/watch.js';
 
 describe('watch command', () => {
   describe('WatchBuildState', () => {
@@ -67,8 +68,12 @@ describe('watch command', () => {
       let buildCommandCalled = false;
 
       const mockDeps = {
-        loadConfig: () => { loadConfigCalled = true; },
-        buildCommand: async () => { buildCommandCalled = true; },
+        loadConfig: () => {
+          loadConfigCalled = true;
+        },
+        buildCommand: async () => {
+          buildCommandCalled = true;
+        },
         logger: { info: () => {}, error: () => {}, newline: () => {} }
       };
 
@@ -95,7 +100,9 @@ describe('watch command', () => {
 
       const mockDeps = {
         loadConfig: () => {},
-        buildCommand: async () => { throw new Error('Build failed'); },
+        buildCommand: async () => {
+          throw new Error('Build failed');
+        },
         logger: { info: () => {}, error: () => {}, newline: () => {} }
       };
 
@@ -107,7 +114,9 @@ describe('watch command', () => {
       const state = new WatchBuildState();
 
       const mockDeps = {
-        loadConfig: () => { throw new Error('Invalid config'); },
+        loadConfig: () => {
+          throw new Error('Invalid config');
+        },
         buildCommand: async () => {},
         logger: { info: () => {}, error: () => {}, newline: () => {} }
       };
@@ -155,10 +164,14 @@ describe('watch command', () => {
 
       const mockDeps = {
         loadConfig: () => {},
-        buildCommand: async () => { throw new Error('Build error'); },
+        buildCommand: async () => {
+          throw new Error('Build error');
+        },
         logger: {
           info: () => {},
-          error: (msg) => { errorLogged = msg; },
+          error: msg => {
+            errorLogged = msg;
+          },
           newline: () => {}
         }
       };
