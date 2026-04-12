@@ -331,8 +331,9 @@ async function runSassBuild(tempDir, options, outputDir, layers, scssContent) {
   // Output SCSS if requested
   if (options.format === 'scss' || options.format === 'both') {
     const { filename } = getOutputFilenames(layers);
-    writeFileSync(resolve(outputDir, `${filename}.scss`), scssContent);
-    logger.success(`Generated: ${logger.path(`${filename}.scss`)}`);
+    const scssFilename = `${filename}.scss`;
+    writeFileSync(resolve(outputDir, scssFilename), scssContent);
+    logger.success(`Generated: ${logger.path(scssFilename)}`);
   }
 
   // Clean up temp directory

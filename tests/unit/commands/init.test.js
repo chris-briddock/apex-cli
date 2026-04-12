@@ -61,7 +61,7 @@ describe('init command', () => {
       assert.strictEqual(result, CASCADE_LAYER_IMPORTS);
     });
 
-    it('should return Nuxt config comment with apexcss imports', () => {
+    it('should return Nuxt config comment with apexcss layer imports', () => {
       const result = getImportStatement('nuxt', './src/apexcss');
       assert.ok(result.includes('nuxt.config.ts'));
       assert.ok(result.includes('apexcss/base'));
