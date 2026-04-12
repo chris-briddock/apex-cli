@@ -249,6 +249,44 @@ export async function buildCommand(options) {
 }
 
 /**
+ * Compile a single SCSS file
+ * @param {string} entryFile - Path to entry SCSS file
+ * @param {string} outputPath - Path to output CSS file
+ * @param {object} compileOptions - Sass compile options
+ * @returns {object} - Compilation result with css and sourceMap
+ */
+function compileSassFile(entryFile, outputPath, compileOptions) {
+  const result = sass.compile(entryFile, compileOptions);
+  writeFileSync(outputPath, result.css);
+  return result;
+}
+
+/**
+ * Log successful build with file size
+ * @param {string} filename - Name of the file
+ * @param {string} css - CSS content
+ * @param {string} description - Description of what was built
+ */
+function logBuildSuccess(filename, css, description) {
+  const contentBytes = Buffer.byteLength(css, 'utf8');
+  const sizeKB = (contentBytes / 1024).toFixed(2);
+  logger.success(`Built: ${logger.path(filename)} (${sizeKB} KB) [${description}]`);
+}
+
+/**
+ * Write source map file if enabled
+ * @param {string} outputDir - Output directory
+ * @param {string} filename - Base filename without extension
+ * @param {object} sourceMap - Source map object
+ * @param {boolean} enabled - Whether source maps are enabled
+ */
+function writeSourceMap(outputDir, filename, sourceMap, enabled) {
+  if (enabled && sourceMap) {
+    writeFileSync(resolve(outputDir, `${filename}.css.map`), JSON.stringify(sourceMap));
+  }
+}
+
+/**
  * Run Sass build
  * @param {string} tempDir - Temp directory path
  * @param {object} options - Build options
@@ -258,41 +296,43 @@ export async function buildCommand(options) {
  * @returns {Promise<void>}
  */
 async function runSassBuild(tempDir, options, outputDir, layers, scssContent) {
-  const entryFile = resolve(tempDir, 'apex-entry.scss');
-
-  // Compile SCSS to CSS using Sass
-  const result = sass.compile(entryFile, {
+  const compileOptions = {
     loadPaths: [tempDir],
     sourceMap: options.sourcemap,
     style: options.minify ? 'compressed' : 'expanded'
-  });
+  };
 
-  // Get output filenames based on layers
-  const { filename, description } = getOutputFilenames(layers);
+  // Build individual layer files for cascade layer support
+  const layerFiles = ['base', 'utilities', 'themes'];
 
-  // Write CSS output
-  const finalCssPath = resolve(outputDir, `${filename}.css`);
-  writeFileSync(finalCssPath, result.css);
+  for (const layer of layerFiles) {
+    if (!layers.includes(layer)) {
+      continue;
+    }
 
-  // Calculate file size
-  const contentBytes = Buffer.byteLength(result.css, 'utf8');
-  const sizeKB = (contentBytes / 1024).toFixed(2);
+    const layerEntry = resolve(tempDir, `${layer}.scss`);
+    if (!existsSync(layerEntry)) {
+      continue;
+    }
 
-  const filePath = logger.path(`${filename}.css`);
-  logger.success(`Built: ${filePath} (${sizeKB} KB) [${description}]`);
+    const result = compileSassFile(layerEntry, resolve(outputDir, `${layer}.css`), compileOptions);
+    logBuildSuccess(`${layer}.css`, result.css, `${layer} layer`);
+    writeSourceMap(outputDir, layer, result.sourceMap, options.sourcemap);
+  }
 
-  // Write source map if generated
-  if (options.sourcemap && result.sourceMap) {
-    const mapDest = resolve(outputDir, `${filename}.css.map`);
-    writeFileSync(mapDest, JSON.stringify(result.sourceMap));
-    logger.success('Source map generated');
+  // Also build combined file if all layers are selected
+  if (layers.length === 3) {
+    const entryFile = resolve(tempDir, 'apex-entry.scss');
+    const result = compileSassFile(entryFile, resolve(outputDir, 'apex.css'), compileOptions);
+    logBuildSuccess('apex.css', result.css, 'complete framework');
+    writeSourceMap(outputDir, 'apex', result.sourceMap, options.sourcemap);
   }
 
   // Output SCSS if requested
   if (options.format === 'scss' || options.format === 'both') {
+    const { filename } = getOutputFilenames(layers);
     writeFileSync(resolve(outputDir, `${filename}.scss`), scssContent);
-    const scssPath = logger.path(`${filename}.scss`);
-    logger.success(`Generated: ${scssPath}`);
+    logger.success(`Generated: ${logger.path(`${filename}.scss`)}`);
   }
 
   // Clean up temp directory
