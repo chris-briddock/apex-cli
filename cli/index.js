@@ -1,12 +1,11 @@
-import { Command } from 'commander';
 import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-
-import { initCommand } from './commands/init.js';
+import { fileURLToPath } from 'node:url';
+import { Command } from 'commander';
 import { buildCommand } from './commands/build.js';
-import { watchCommand } from './commands/watch.js';
 import { doctorCommand } from './commands/doctor.js';
+import { initCommand } from './commands/init.js';
+import { watchCommand } from './commands/watch.js';
 import { logger } from './utils/logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -43,7 +42,7 @@ export function cli(args) {
     .description('Initialize ApexCSS configuration in your project')
     .option('-f, --framework <name>', 'specify framework (react, vue, angular, svelte, astro, next, nuxt, vanilla)')
     .option('--no-import', 'skip adding imports to entry files')
-    .action(async (options) => {
+    .action(async options => {
       try {
         await initCommand({
           configPath: program.opts().config,
@@ -62,8 +61,12 @@ export function cli(args) {
     .command('build')
     .description('Build custom CSS from configuration')
     .option('--format <format>', 'output format (css, scss, both)', 'css')
-    .option('-l, --layer <layers>', 'build specific layers (base, utilities, themes, all). Comma-separated for multiple', 'all')
-    .action(async (options) => {
+    .option(
+      '-l, --layer <layers>',
+      'build specific layers (base, utilities, themes, all). Comma-separated for multiple',
+      'all'
+    )
+    .action(async options => {
       try {
         await buildCommand({
           configPath: program.opts().config,
@@ -111,7 +114,7 @@ export function cli(args) {
     });
 
   // Handle unknown commands
-  program.on('command:*', (operands) => {
+  program.on('command:*', operands => {
     logger.error(`Unknown command: ${operands[0]}`);
     logger.info('Run "apexcss --help" for available commands');
     process.exit(1);

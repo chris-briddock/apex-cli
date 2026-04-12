@@ -4,9 +4,9 @@
 
 import { watchFile } from 'node:fs';
 import { resolve } from 'node:path';
-import { buildCommand } from './build.js';
 import { loadConfig } from '../utils/config-loader.js';
 import { logger } from '../utils/logger.js';
+import { buildCommand } from './build.js';
 
 /**
  * Build state manager for watch mode

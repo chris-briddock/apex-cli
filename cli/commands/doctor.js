@@ -2,11 +2,11 @@
  * Doctor command - Check system setup and diagnose issues
  */
 
+import { execSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { execSync } from 'node:child_process';
-import { logger } from '../utils/logger.js';
 import { detectFramework } from '../utils/framework-detector.js';
+import { logger } from '../utils/logger.js';
 
 /**
  * Run diagnostic checks

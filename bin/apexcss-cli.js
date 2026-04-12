@@ -4,10 +4,10 @@
  * ApexCSS CLI
  *
  * Usage:
- *   apexcss init              Initialize configuration
- *   apexcss build             Build custom CSS
- *   apexcss watch             Watch for changes
- *   apexcss doctor            Check system setup
+ *   apexcss-cli init              Initialize configuration
+ *   apexcss-cli build             Build custom CSS
+ *   apexcss-cli watch             Watch for changes
+ *   apexcss-cli doctor            Check system setup
  *
  * Options:
  *   -c, --config <path>       Config file path (default: ./apex.config.js)

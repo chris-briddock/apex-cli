@@ -1,22 +1,23 @@
 /**
  * Config loader tests
  */
-import { describe, it, beforeEach, afterEach } from 'node:test';
+
 import assert from 'node:assert';
-import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { afterEach, beforeEach, describe, it } from 'node:test';
 import {
-  loadConfig,
   defaultConfig,
-  validateFeatures,
-  validateBreakpoints,
-  validateColors,
-  validateColorHue,
-  validateColorChroma,
+  generateSampleConfig,
   isObject,
+  loadConfig,
   mergeConfig,
-  generateSampleConfig
+  validateBreakpoints,
+  validateColorChroma,
+  validateColorHue,
+  validateColors,
+  validateFeatures
 } from '../../../cli/utils/config-loader.js';
 
 describe('config-loader', () => {
@@ -255,10 +256,13 @@ describe('config-loader', () => {
 
     it('validateColors should validate multiple colors', () => {
       const errors = [];
-      validateColors({
-        primary: { hue: 250, chroma: 0.2 },
-        secondary: { hue: 180, chroma: 0.15 }
-      }, errors);
+      validateColors(
+        {
+          primary: { hue: 250, chroma: 0.2 },
+          secondary: { hue: 180, chroma: 0.15 }
+        },
+        errors
+      );
       assert.strictEqual(errors.length, 0);
     });
 

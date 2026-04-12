@@ -4,11 +4,11 @@
  * Uses Node.js built-in test runner
  */
 
+import { readdirSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { run } from 'node:test';
 import { spec, tap } from 'node:test/reporters';
-import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { readdirSync } from 'node:fs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -63,7 +63,7 @@ stream.on('end', () => {
   console.log(`\n✅ Tests completed in ${duration}ms`);
 });
 
-stream.on('error', (error) => {
+stream.on('error', error => {
   console.error('\n❌ Test run failed:', error.message);
   process.exit(1);
 });

@@ -2,12 +2,12 @@
  * Init command - Initialize ApexCSS configuration in user's project
  */
 
-import { writeFileSync, existsSync, readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { mkdir } from 'node:fs/promises';
-import { logger } from '../utils/logger.js';
+import { resolve } from 'node:path';
 import { generateSampleConfig } from '../utils/config-loader.js';
-import { detectFramework, getRecommendedOutputDir, getAvailableFrameworks } from '../utils/framework-detector.js';
+import { detectFramework, getAvailableFrameworks, getRecommendedOutputDir } from '../utils/framework-detector.js';
+import { logger } from '../utils/logger.js';
 
 /**
  * Prompt user for initialization options
@@ -51,9 +51,7 @@ async function promptForOptions(framework, options) {
     {
       type: 'confirm',
       name: 'addImport',
-      message: framework.entryFile
-        ? `Add import to ${framework.entryFile}?`
-        : 'Add import to your main entry file?',
+      message: framework.entryFile ? `Add import to ${framework.entryFile}?` : 'Add import to your main entry file?',
       default: true,
       when: () => framework.entryFile || framework.id !== 'vanilla'
     }
@@ -98,9 +96,7 @@ async function getUserOptions(framework, options, cwd = process.cwd()) {
 
     if (frameworkDef) {
       const entryFiles = frameworkDef.entryFiles || [];
-      const existingEntry = entryFiles.find(file =>
-        existsSync(resolve(cwd, file))
-      );
+      const existingEntry = entryFiles.find(file => existsSync(resolve(cwd, file)));
 
       result.selectedFramework = {
         ...framework,
@@ -293,12 +289,14 @@ function setupPackageJsonScripts(cwd) {
 export async function promptOverwrite() {
   try {
     const { default: inquirer } = await import('inquirer');
-    return await inquirer.prompt([{
-      type: 'confirm',
-      name: 'overwrite',
-      message: 'Overwrite existing config file?',
-      default: false
-    }]);
+    return await inquirer.prompt([
+      {
+        type: 'confirm',
+        name: 'overwrite',
+        message: 'Overwrite existing config file?',
+        default: false
+      }
+    ]);
   } catch {
     // Inquirer not available - default to not overwriting
     return { overwrite: false };
@@ -325,19 +323,19 @@ const CASCADE_LAYER_IMPORTS = `@layer base, utilities, themes;
 export function getImportStatement(frameworkId, _outputDir) {
   // All CSS-based frameworks now use cascade layers with node_modules imports
   switch (frameworkId) {
-  case 'angular':
-  case 'react':
-  case 'vue':
-  case 'svelte':
-  case 'vanilla':
-  case 'astro':
-  case 'next':
-    // Next.js uses globals.css for global styles with cascade layers
-    return CASCADE_LAYER_IMPORTS;
-  case 'nuxt':
-    return '// Add to nuxt.config.ts:\n// css: [\'apexcss/base\', \'apexcss/utilities\', \'apexcss/themes\']\n';
-  default:
-    return CASCADE_LAYER_IMPORTS;
+    case 'angular':
+    case 'react':
+    case 'vue':
+    case 'svelte':
+    case 'vanilla':
+    case 'astro':
+    case 'next':
+      // Next.js uses globals.css for global styles with cascade layers
+      return CASCADE_LAYER_IMPORTS;
+    case 'nuxt':
+      return "// Add to nuxt.config.ts:\n// css: ['apexcss/base', 'apexcss/utilities', 'apexcss/themes']\n";
+    default:
+      return CASCADE_LAYER_IMPORTS;
   }
 }
 
@@ -363,7 +361,13 @@ export function addImportToFile(filePath, importStatement, frameworkId) {
   if (isCSSFile) {
     // For CSS files, add cascade layer imports at the top
     newContent = importStatement + content;
-  } else if (frameworkId === 'react' || frameworkId === 'vue' || frameworkId === 'svelte' || frameworkId === 'astro' || frameworkId === 'vanilla') {
+  } else if (
+    frameworkId === 'react' ||
+    frameworkId === 'vue' ||
+    frameworkId === 'svelte' ||
+    frameworkId === 'astro' ||
+    frameworkId === 'vanilla'
+  ) {
     // Add after other JS imports, before code
     const lines = content.split('\n');
     let lastImportIndex = -1;
