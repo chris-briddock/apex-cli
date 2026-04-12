@@ -31,9 +31,9 @@ describe('init command', () => {
 @import 'apexcss/themes' layer(themes);
 `;
 
-    it('should return Next.js import statement with JS imports', () => {
+    it('should return Next.js import statement with cascade layers', () => {
       const result = getImportStatement('next', './src/apexcss');
-      assert.strictEqual(result, 'import \'apexcss/base\';\nimport \'apexcss/utilities\';\nimport \'apexcss/themes\';\n');
+      assert.strictEqual(result, CASCADE_LAYER_IMPORTS);
     });
 
     it('should return React import statement with cascade layers', () => {

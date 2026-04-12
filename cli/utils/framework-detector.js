@@ -13,10 +13,11 @@ export const FRAMEWORKS = {
   next: {
     name: 'Next.js',
     detect: (pkg) => pkg.dependencies?.next || pkg.devDependencies?.next,
-    entryFiles: ['src/app/layout.tsx', 'src/app/layout.jsx', 'app/layout.tsx', 'app/layout.jsx'],
-    importStatement: 'import \'apexcss\';\n',
-    cssConfig: '// Import in layout.tsx:\nimport \'apexcss/base\';\nimport \'apexcss/utilities\';\nimport \'apexcss/themes\';\n',
-    configFile: 'next.config.js'
+    entryFiles: ['src/app/globals.css', 'app/globals.css', 'src/styles/globals.css', 'styles/globals.css'],
+    importStatement: '@import \'apexcss\';\n',
+    cssConfig: '// Add to globals.css:\n@import \'apexcss/base\';\n@import \'apexcss/utilities\';\n@import \'apexcss/themes\';\n',
+    configFile: 'next.config.js',
+    fallbackFile: 'src/app/globals.css'
   },
   nuxt: {
     name: 'Nuxt',
@@ -44,7 +45,8 @@ export const FRAMEWORKS = {
     detect: (pkg) => pkg.dependencies?.['@angular/core'],
     entryFiles: ['src/styles.css', 'src/styles.scss', 'angular.json'],
     importStatement: '@import \'apexcss\';\n',
-    configFile: 'angular.json'
+    configFile: 'angular.json',
+    fallbackFile: 'src/styles.css'
   },
   svelte: {
     name: 'Svelte',
@@ -149,23 +151,14 @@ export function getAvailableFrameworks() {
 }
 
 /**
- * Get framework-specific output directory recommendation
- * @param {string} frameworkId - Framework identifier
+ * Get the default output directory for CSS builds
+ * @param {string} [_frameworkId] - Framework identifier (unused - kept for API compatibility)
  * @returns {string} - Recommended output directory
  */
-export function getRecommendedOutputDir(frameworkId) {
-  const recommendations = {
-    next: './dist/',
-    nuxt: './dist/',
-    react: './dist/',
-    vue: './dist/',
-    angular: './dist/',
-    svelte: './dist/',
-    astro: './dist/',
-    vanilla: './dist/'
-  };
-
-  return recommendations[frameworkId] || './dist/';
+export function getRecommendedOutputDir(_frameworkId) {
+  // All frameworks output to node_modules/apexcss/dist by default
+  // This aligns with where the CSS source files reside (node_modules/apexcss/src)
+  return 'node_modules/apexcss/dist';
 }
 
 /**

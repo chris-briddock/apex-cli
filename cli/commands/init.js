@@ -18,6 +18,25 @@ import { detectFramework, getRecommendedOutputDir, getAvailableFrameworks } from
 async function promptForOptions(framework, options) {
   const { default: inquirer } = await import('inquirer');
 
+  // First, ask if user wants to accept defaults
+  const defaultAnswer = await inquirer.prompt([
+    {
+      type: 'confirm',
+      name: 'useDefaults',
+      message: `Use default configuration?\n  Framework: ${framework.name}\n  Add imports: Yes`,
+      default: true
+    }
+  ]);
+
+  if (defaultAnswer.useDefaults) {
+    return {
+      selectedFramework: framework,
+      outputDir: options.outputDir || getRecommendedOutputDir(framework.id),
+      addImport: true
+    };
+  }
+
+  // If not using defaults, show full prompts
   const answers = await inquirer.prompt([
     {
       type: 'list',
@@ -28,12 +47,6 @@ async function promptForOptions(framework, options) {
         name: f.name,
         value: f.id
       }))
-    },
-    {
-      type: 'input',
-      name: 'outputDir',
-      message: 'CSS output directory:',
-      default: options.outputDir || getRecommendedOutputDir(framework.id)
     },
     {
       type: 'confirm',
@@ -48,32 +61,31 @@ async function promptForOptions(framework, options) {
 
   return {
     selectedFramework: { ...framework, id: answers.framework },
-    outputDir: answers.outputDir,
+    outputDir: options.outputDir || getRecommendedOutputDir(framework.id),
     addImport: answers.addImport
   };
 }
 
 /**
- * Get user options (interactive or CLI)
+ * Get user options (interactive)
  * @param {object} framework - Detected framework
  * @param {object} options - Command options
  * @param {string} cwd - Current working directory
  * @returns {Promise<{selectedFramework: object, outputDir: string, addImport: boolean}>}
  */
 async function getUserOptions(framework, options, cwd = process.cwd()) {
+  // Always use interactive mode to ask about defaults first
   let result = {
     selectedFramework: framework,
     outputDir: options.outputDir,
     addImport: options.addImport
   };
 
-  if (options.interactive) {
-    try {
-      result = await promptForOptions(framework, options);
-    } catch {
-      // Interactive mode failed - fallback to defaults
-      logger.warn('Interactive mode not available, using defaults');
-    }
+  try {
+    result = await promptForOptions(framework, options);
+  } catch {
+    // Interactive mode failed - fallback to defaults
+    logger.warn('Interactive mode not available, using defaults');
   }
 
   // Override with CLI framework option if provided
@@ -211,22 +223,69 @@ export async function initCommand(options) {
     addFrameworkImport(cwd, selectedFramework, outputDir);
   }
 
+  // Add npm scripts to package.json
+  setupPackageJsonScripts(cwd);
+
   logger.newline();
   logger.success('ApexCSS initialized successfully!');
   logger.newline();
   logger.info('Next steps:');
   logger.list([
     `Edit ${logger.path(options.configPath)} to customize your configuration`,
-    `Run ${logger.cmd('npx apexcss build')} to generate your CSS`,
-    `Run ${logger.cmd('npx apexcss watch')} during development`
+    `Run ${logger.cmd('npm run apexcss:build')} to generate your CSS`,
+    `Run ${logger.cmd('npm run apexcss:watch')} during development`
   ]);
   logger.newline();
 }
 
 /**
- * Prompt for overwrite confirmation
- * @returns {Promise<{overwrite: boolean}>}
+ * Add npm scripts for ApexCSS to package.json
+ * @param {string} cwd - Current working directory
  */
+function setupPackageJsonScripts(cwd) {
+  const packageJsonPath = resolve(cwd, 'package.json');
+
+  if (!existsSync(packageJsonPath)) {
+    logger.warn('No package.json found. Skipping npm scripts setup.');
+    logger.info('To create one, run: npm init');
+    return;
+  }
+
+  try {
+    const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
+
+    // Ensure scripts object exists
+    packageJson.scripts = packageJson.scripts || {};
+
+    // Add ApexCSS scripts if they don't exist
+    const scripts = {
+      'apexcss:build': 'npx apexcss build',
+      'apexcss:watch': 'npx apexcss watch'
+    };
+
+    let scriptsAdded = false;
+    for (const [name, command] of Object.entries(scripts)) {
+      if (!packageJson.scripts[name]) {
+        packageJson.scripts[name] = command;
+        scriptsAdded = true;
+      }
+    }
+
+    if (scriptsAdded) {
+      writeFileSync(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`);
+      logger.success('Added npm scripts to package.json:');
+      logger.list([
+        `${logger.cmd('npm run apexcss:build')} - Build CSS once`,
+        `${logger.cmd('npm run apexcss:watch')} - Watch for changes`
+      ]);
+    } else {
+      logger.info('ApexCSS npm scripts already exist in package.json');
+    }
+  } catch (error) {
+    logger.warn(`Could not update package.json: ${error.message}`);
+  }
+}
+
 /**
  * Prompt for overwrite confirmation
  * @returns {Promise<{overwrite: boolean}>}
@@ -260,18 +319,10 @@ const CASCADE_LAYER_IMPORTS = `@layer base, utilities, themes;
 /**
  * Get the appropriate import statement for the framework
  * @param {string} frameworkId - Framework identifier
- * @param {string} outputDir - Output directory
+ * @param {string} [_outputDir] - Output directory (unused - kept for API compatibility)
  * @returns {string} - Import statement
  */
-export function getImportStatement(frameworkId, outputDir) {
-  // Normalize path: remove leading ./ and trailing slashes
-  let cleanPath = outputDir.replace(/^\.\//, '').replace(/\/+$/, '');
-
-  // If path is empty after cleanup, use 'dist'
-  if (!cleanPath) {
-    cleanPath = 'dist';
-  }
-
+export function getImportStatement(frameworkId, _outputDir) {
   // All CSS-based frameworks now use cascade layers with node_modules imports
   switch (frameworkId) {
   case 'angular':
@@ -280,10 +331,9 @@ export function getImportStatement(frameworkId, outputDir) {
   case 'svelte':
   case 'vanilla':
   case 'astro':
-    return CASCADE_LAYER_IMPORTS;
   case 'next':
-    // Next.js needs JS imports in layout.tsx, not CSS @imports (CSS @import doesn't resolve node_modules)
-    return 'import \'apexcss/base\';\nimport \'apexcss/utilities\';\nimport \'apexcss/themes\';\n';
+    // Next.js uses globals.css for global styles with cascade layers
+    return CASCADE_LAYER_IMPORTS;
   case 'nuxt':
     return '// Add to nuxt.config.ts:\n// css: [\'apexcss/base\', \'apexcss/utilities\', \'apexcss/themes\']\n';
   default:

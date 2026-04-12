@@ -11,7 +11,7 @@
  *
  * Options:
  *   -c, --config <path>       Config file path (default: ./apex.config.js)
- *   -o, --output <dir>        Output directory (default: ./src/apexcss/)
+ *   -o, --output <dir>        Output directory (default: node_modules/apexcss/dist)
  *   --minify                  Minify output CSS
  *   --sourcemap               Generate source maps
  *   -v, --version             Show version
