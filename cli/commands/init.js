@@ -255,8 +255,8 @@ function setupPackageJsonScripts(cwd) {
 
     // Add ApexCSS scripts if they don't exist
     const scripts = {
-      'apexcss:build': 'npx apexcss build',
-      'apexcss:watch': 'npx apexcss watch'
+      'apexcss:build': 'npx apexcss-cli build',
+      'apexcss:watch': 'npx apexcss-cli watch'
     };
 
     let scriptsAdded = false;

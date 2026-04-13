@@ -17,12 +17,6 @@ const colors = {
 
 /**
  * Format a message with color
- * @param {string} text
- * @param {string} color
- * @returns {string}
- */
-/**
- * Format a message with color
  * @param {string} text - Text to colorize
  * @param {string} color - Color name
  * @returns {string} - Colorized text

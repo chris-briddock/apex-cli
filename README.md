@@ -1,4 +1,4 @@
-# @apexcss/cli
+# ApexCSS CLI
 
 ApexCSS CLI - A powerful build tool with automatic framework detection and seamless integration.
 

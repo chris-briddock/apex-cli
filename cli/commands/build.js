@@ -2,14 +2,13 @@
  * Build command - Generate custom CSS from configuration
  */
 
-import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import * as sass from 'sass';
-import { loadConfig } from '../utils/config-loader.js';
-import { logger } from '../utils/logger.js';
-
 // Import the config builder
 import { generateSCSS } from '../utils/config-builder.js';
+import { loadConfig } from '../utils/config-loader.js';
+import { logger } from '../utils/logger.js';
 
 /**
  * Valid layer names
@@ -37,81 +36,6 @@ export function parseLayers(layersOption) {
 }
 
 /**
- * Generate entry SCSS content based on selected layers
- * @param {string[]} layers - Array of layer names to include
- * @returns {string} - SCSS content for entry file
- */
-export function generateLayerEntry(layers) {
-  const lines = [
-    '// ============================================================================',
-    '// ApexCSS - Layered Build Entry Point',
-    '// ============================================================================',
-    '// Auto-generated based on --layer option',
-    '// ============================================================================',
-    ''
-  ];
-
-  // Always include config
-  lines.push("@use 'config';");
-
-  // Include selected layers
-  for (const layer of layers) {
-    lines.push(`@use '${layer}';`);
-  }
-
-  lines.push(
-    '',
-    '// ============================================================================',
-    '// End of Entry Point',
-    '// ============================================================================',
-    ''
-  );
-
-  return lines.join('\n');
-}
-
-/**
- * Get source directories needed for selected layers
- * @param {string[]} layers - Array of layer names
- * @returns {string[]} - Array of source directory names
- */
-export function getSourceEntriesForLayers(layers) {
-  const entries = new Set(['config']);
-
-  for (const layer of layers) {
-    entries.add(layer);
-    switch (layer) {
-      case 'utilities':
-        entries.add('mixins');
-        entries.add('plugins');
-        break;
-      case 'base':
-        entries.add('mixins');
-        break;
-      case 'themes':
-        entries.add('mixins');
-        break;
-    }
-  }
-
-  return Array.from(entries);
-}
-
-/**
- * Setup build environment
- * @param {string} outputDir - Output directory path
- * @returns {string} - Temp directory path
- */
-export function setupBuildEnvironment(outputDir) {
-  const tempDir = resolve(outputDir, '.apexcss-build');
-  if (existsSync(tempDir)) {
-    rmSync(tempDir, { recursive: true });
-  }
-  mkdirSync(tempDir, { recursive: true });
-  return tempDir;
-}
-
-/**
  * Determine source directory
  * @param {string} cwd - Current working directory
  * @returns {string} - Source directory path
@@ -130,48 +54,116 @@ export function determineSourceDir(cwd) {
 }
 
 /**
- * Write configuration files to temp directory and output directory
- * @param {string} tempDir - Temp directory path
- * @param {string} outputDir - Output directory path
+ * Write configuration files
  * @param {string} scssContent - SCSS content to write
+ * @param {string} sourceDir - Source directory (node_modules/apexcss/src)
  */
-export function writeConfigFiles(tempDir, outputDir, scssContent) {
-  const configDir = resolve(tempDir, 'config');
-  mkdirSync(configDir, { recursive: true });
-  writeFileSync(resolve(configDir, '_custom-config.scss'), scssContent);
-  writeFileSync(resolve(configDir, '_index.scss'), "// Auto-generated config entry\n@forward 'custom-config';\n");
-
-  // Also write _custom-config.scss to output directory for user reference
-  writeFileSync(resolve(outputDir, '_custom-config.scss'), scssContent);
-}
-
-/**
- * Find generated CSS file in temp directory
- * @param {string} tempDir - Temp directory path
- * @returns {string | undefined} - CSS file path or undefined
- */
-export function findGeneratedCss(tempDir) {
-  const candidates = ['apex.css', 'style.css'];
-  for (const file of candidates) {
-    const fullPath = resolve(tempDir, file);
-    if (existsSync(fullPath)) {
-      return fullPath;
-    }
+export function writeConfigFiles(scssContent, sourceDir) {
+  // Write _custom-config.scss to node_modules/apexcss/src/config (the actual source location)
+  const sourceConfigDir = resolve(sourceDir, 'config');
+  if (existsSync(sourceConfigDir)) {
+    writeFileSync(resolve(sourceConfigDir, '_custom-config.scss'), scssContent);
   }
-  return undefined;
 }
 
 /**
- * Copy source map if generated
- * @param {string} tempDir - Temp directory path
- * @param {string} outputDir - Output directory path
+ * Get entry file for a layer
+ * @param {string} layer - Layer name
+ * @returns {string} - Entry file name
  */
-export function copySourceMap(tempDir, outputDir) {
-  const mapPath = resolve(tempDir, 'apex.css.map');
-  if (existsSync(mapPath)) {
-    const mapContent = readFileSync(mapPath, 'utf-8');
-    writeFileSync(resolve(outputDir, 'apex.css.map'), mapContent);
-    logger.success('Source map generated');
+function getEntryFile(layer) {
+  switch (layer) {
+    case 'base':
+      return 'entry-base.scss';
+    case 'utilities':
+      return 'entry-utilities.scss';
+    case 'themes':
+      return 'entry-themes.scss';
+    default:
+      return 'main.scss';
+  }
+}
+
+/**
+ * Compile a single SCSS file
+ * @param {string} entryFile - Path to entry SCSS file
+ * @param {string} outputPath - Path to output CSS file
+ * @param {object} compileOptions - Sass compile options
+ * @returns {object} - Compilation result with css and sourceMap
+ */
+function compileSassFile(entryFile, outputPath, compileOptions) {
+  const result = sass.compile(entryFile, compileOptions);
+  writeFileSync(outputPath, result.css);
+  return result;
+}
+
+/**
+ * Log successful build with file size
+ * @param {string} filename - Name of the file
+ * @param {string} css - CSS content
+ * @param {string} description - Description of what was built
+ */
+function logBuildSuccess(filename, css, description) {
+  const contentBytes = Buffer.byteLength(css, 'utf8');
+  const sizeKB = (contentBytes / 1024).toFixed(2);
+  logger.success(`Built: ${logger.path(filename)} (${sizeKB} KB) [${description}]`);
+}
+
+/**
+ * Write source map file if enabled
+ * @param {string} outputDir - Output directory
+ * @param {string} filename - Base filename without extension
+ * @param {object} sourceMap - Source map object
+ * @param {boolean} enabled - Whether source maps are enabled
+ */
+function writeSourceMap(outputDir, filename, sourceMap, enabled) {
+  if (enabled && sourceMap) {
+    writeFileSync(resolve(outputDir, `${filename}.css.map`), JSON.stringify(sourceMap));
+  }
+}
+
+/**
+ * Run Sass build using the entry files from node_modules
+ * @param {string} sourceDir - Source directory path (node_modules/apexcss/src)
+ * @param {object} options - Build options
+ * @param {string} outputDir - Output directory path
+ * @param {string[]} layers - Array of layer names
+ * @returns {Promise<void>}
+ */
+async function runSassBuild(sourceDir, options, outputDir, layers) {
+  const compileOptions = {
+    loadPaths: [sourceDir],
+    sourceMap: options.sourcemap,
+    style: options.minify ? 'compressed' : 'expanded'
+  };
+
+  // Build individual layer files
+  const layerFiles = ['base', 'utilities', 'themes'];
+
+  for (const layer of layerFiles) {
+    if (!layers.includes(layer)) {
+      continue;
+    }
+
+    const entryFile = resolve(sourceDir, getEntryFile(layer));
+    if (!existsSync(entryFile)) {
+      logger.warn(`Entry file not found: ${entryFile}`);
+      continue;
+    }
+
+    const result = compileSassFile(entryFile, resolve(outputDir, `${layer}.css`), compileOptions);
+    logBuildSuccess(`${layer}.css`, result.css, `${layer} layer`);
+    writeSourceMap(outputDir, layer, result.sourceMap, options.sourcemap);
+  }
+
+  // Build complete framework if all layers requested
+  if (layers.length === 3) {
+    const mainFile = resolve(sourceDir, 'main.scss');
+    if (existsSync(mainFile)) {
+      const result = compileSassFile(mainFile, resolve(outputDir, 'apex.css'), compileOptions);
+      logBuildSuccess('apex.css', result.css, 'complete framework');
+      writeSourceMap(outputDir, 'apex', result.sourceMap, options.sourcemap);
+    }
   }
 }
 
@@ -216,172 +208,24 @@ export async function buildCommand(options) {
   const layers = parseLayers(options.layers);
   logger.info(`Building layers: ${layers.join(', ')}`);
 
-  // Setup build environment
-  const tempDir = setupBuildEnvironment(outputDir);
+  // Write custom config to source directory (node_modules/apexcss/src/config)
+  logger.info('Writing configuration...');
+  writeConfigFiles(scssContent, sourceDir);
 
-  // Copy source files to temp directory based on selected layers
-  logger.info('Preparing build environment...');
-  copySourceFiles(sourceDir, tempDir, layers);
-
-  // Write custom config
-  writeConfigFiles(tempDir, outputDir, scssContent);
-
-  // Generate entry files for combined build
-  const entryContent = generateLayerEntry(layers);
-  writeFileSync(resolve(tempDir, 'apex-entry.scss'), entryContent);
-
-  // Generate individual layer entry files for per-layer builds
-  const allLayers = ['base', 'utilities', 'themes'];
-  for (const layer of allLayers) {
-    if (layers.includes(layer)) {
-      const layerEntryContent = generateLayerEntry([layer]);
-      writeFileSync(resolve(tempDir, `${layer}.scss`), layerEntryContent);
-    }
-  }
-
-  // Build using Sass compiler
+  // Build using Sass compiler on the entry files
   logger.info('Compiling CSS...');
+  logger.newline();
 
   try {
-    await runSassBuild(tempDir, options, outputDir, layers, scssContent);
+    await runSassBuild(sourceDir, options, outputDir, layers);
 
     const duration = Date.now() - startTime;
     logger.newline();
     logger.success(`Build completed in ${duration}ms`);
+    logger.newline();
+    logger.info(`Output directory: ${logger.path(options.outputDir)}`);
   } catch (error) {
-    // Clean up temp directory on error
-    if (existsSync(tempDir)) {
-      rmSync(tempDir, { recursive: true });
-    }
+    logger.error(`Build failed: ${error.message}`);
     throw error;
   }
-}
-
-/**
- * Compile a single SCSS file
- * @param {string} entryFile - Path to entry SCSS file
- * @param {string} outputPath - Path to output CSS file
- * @param {object} compileOptions - Sass compile options
- * @returns {object} - Compilation result with css and sourceMap
- */
-function compileSassFile(entryFile, outputPath, compileOptions) {
-  const result = sass.compile(entryFile, compileOptions);
-  writeFileSync(outputPath, result.css);
-  return result;
-}
-
-/**
- * Log successful build with file size
- * @param {string} filename - Name of the file
- * @param {string} css - CSS content
- * @param {string} description - Description of what was built
- */
-function logBuildSuccess(filename, css, description) {
-  const contentBytes = Buffer.byteLength(css, 'utf8');
-  const sizeKB = (contentBytes / 1024).toFixed(2);
-  logger.success(`Built: ${logger.path(filename)} (${sizeKB} KB) [${description}]`);
-}
-
-/**
- * Write source map file if enabled
- * @param {string} outputDir - Output directory
- * @param {string} filename - Base filename without extension
- * @param {object} sourceMap - Source map object
- * @param {boolean} enabled - Whether source maps are enabled
- */
-function writeSourceMap(outputDir, filename, sourceMap, enabled) {
-  if (enabled && sourceMap) {
-    writeFileSync(resolve(outputDir, `${filename}.css.map`), JSON.stringify(sourceMap));
-  }
-}
-
-/**
- * Run Sass build
- * @param {string} tempDir - Temp directory path
- * @param {object} options - Build options
- * @param {string} outputDir - Output directory path
- * @param {string[]} layers - Array of layer names
- * @param {string} scssContent - SCSS content
- * @returns {Promise<void>}
- */
-async function runSassBuild(tempDir, options, outputDir, layers, scssContent) {
-  const compileOptions = {
-    loadPaths: [tempDir],
-    sourceMap: options.sourcemap,
-    style: options.minify ? 'compressed' : 'expanded'
-  };
-
-  // Build individual layer files for cascade layer support
-  const layerFiles = ['base', 'utilities', 'themes'];
-
-  for (const layer of layerFiles) {
-    if (!layers.includes(layer)) {
-      continue;
-    }
-
-    const layerEntry = resolve(tempDir, `${layer}.scss`);
-    if (!existsSync(layerEntry)) {
-      continue;
-    }
-
-    const result = compileSassFile(layerEntry, resolve(outputDir, `${layer}.css`), compileOptions);
-    logBuildSuccess(`${layer}.css`, result.css, `${layer} layer`);
-    writeSourceMap(outputDir, layer, result.sourceMap, options.sourcemap);
-  }
-
-  // Also build combined file if all layers are selected
-  if (layers.length === 3) {
-    const entryFile = resolve(tempDir, 'apex-entry.scss');
-    const result = compileSassFile(entryFile, resolve(outputDir, 'apex.css'), compileOptions);
-    logBuildSuccess('apex.css', result.css, 'complete framework');
-    writeSourceMap(outputDir, 'apex', result.sourceMap, options.sourcemap);
-  }
-
-  // Output SCSS if requested
-  if (options.format === 'scss' || options.format === 'both') {
-    const { filename } = getOutputFilenames(layers);
-    const scssFilename = `${filename}.scss`;
-    writeFileSync(resolve(outputDir, scssFilename), scssContent);
-    logger.success(`Generated: ${logger.path(scssFilename)}`);
-  }
-
-  // Clean up temp directory
-  rmSync(tempDir, { recursive: true });
-}
-
-/**
- * Copy source files to temp directory
- * @param {string} sourceDir - Source directory
- * @param {string} tempDir - Temp directory
- * @param {string[]} layers - Array of layer names to include
- */
-function copySourceFiles(sourceDir, tempDir, layers) {
-  const entries = getSourceEntriesForLayers(layers);
-
-  for (const entry of entries) {
-    const sourcePath = resolve(sourceDir, entry);
-    const destPath = resolve(tempDir, entry);
-
-    if (existsSync(sourcePath)) {
-      cpSync(sourcePath, destPath, { recursive: true });
-    }
-  }
-}
-
-/**
- * Generate filenames based on selected layers
- * @param {string[]} layers - Array of layer names
- * @returns {object} - Object with filename and description
- */
-function getOutputFilenames(layers) {
-  if (layers.length === 3) {
-    return { filename: 'apex', description: 'complete framework' };
-  }
-
-  if (layers.length === 1) {
-    return { filename: layers[0], description: `${layers[0]} layer` };
-  }
-
-  const layerSuffix = layers.join('-');
-  return { filename: layerSuffix, description: `${layers.join(' + ')} layers` };
 }
