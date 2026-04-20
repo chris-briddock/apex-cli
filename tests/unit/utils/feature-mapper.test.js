@@ -1,12 +1,12 @@
-import { describe, it } from 'node:test';
 import assert from 'node:assert';
+import { describe, it } from 'node:test';
 import {
-  FEATURE_MAPPINGS,
-  getFeatureNames,
-  classMatchesFeature,
-  findUsedFeatures,
+  analyzeFeatureUsage,
   calculateSavings,
-  analyzeFeatureUsage
+  classMatchesFeature,
+  FEATURE_MAPPINGS,
+  findUsedFeatures,
+  getFeatureNames
 } from '../../../cli/utils/feature-mapper.js';
 
 describe('feature-mapper', () => {
@@ -101,7 +101,7 @@ describe('feature-mapper', () => {
       const used = findUsedFeatures(classes);
       // Variant prefixes should still match base features
       assert(used.has('spacing')); // p-4 matches spacing
-      assert(used.has('colors'));  // text-white matches colors
+      assert(used.has('colors')); // text-white matches colors
       // states and darkMode are detected via the prefix patterns
       const hasStatesOrDark = used.has('states') || used.has('darkMode');
       assert(hasStatesOrDark, 'Should detect state or dark mode variants');
@@ -126,9 +126,10 @@ describe('feature-mapper', () => {
     it('should calculate savings for multiple features', () => {
       const unused = new Set(['transforms3d', 'filters', 'animations']);
       const savings = calculateSavings(unused);
-      const expected = FEATURE_MAPPINGS.transforms3d.estimatedSize +
-                      FEATURE_MAPPINGS.filters.estimatedSize +
-                      FEATURE_MAPPINGS.animations.estimatedSize;
+      const expected =
+        FEATURE_MAPPINGS.transforms3d.estimatedSize +
+        FEATURE_MAPPINGS.filters.estimatedSize +
+        FEATURE_MAPPINGS.animations.estimatedSize;
       assert.strictEqual(savings, expected);
     });
 
@@ -208,8 +209,7 @@ describe('feature-mapper', () => {
       };
 
       const analysis = analyzeFeatureUsage(classes, config);
-      const expectedSavings = FEATURE_MAPPINGS.transforms3d.estimatedSize +
-                             FEATURE_MAPPINGS.filters.estimatedSize;
+      const expectedSavings = FEATURE_MAPPINGS.transforms3d.estimatedSize + FEATURE_MAPPINGS.filters.estimatedSize;
 
       assert.strictEqual(analysis.potentialSavings, expectedSavings);
     });

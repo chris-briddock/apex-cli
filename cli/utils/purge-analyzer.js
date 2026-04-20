@@ -3,8 +3,8 @@
  * Scans project files and extracts CSS class names
  */
 
-import { readdir, readFile, stat } from 'node:fs/promises';
-import { resolve, extname } from 'node:path';
+import { readdir, readFile } from 'node:fs/promises';
+import { extname, resolve } from 'node:path';
 
 /**
  * File extensions to scan for CSS classes
@@ -428,7 +428,7 @@ export function getClassStatistics(classes) {
  * @param {string} cwd - Current working directory
  * @returns {string[]} Suggested directories
  */
-export function suggestDirectories(frameworkId, cwd) {
+export function suggestDirectories(frameworkId, _cwd) {
   const commonDirs = ['src', 'components', 'pages', 'app', 'lib', 'utils'];
 
   const frameworkSpecific = {

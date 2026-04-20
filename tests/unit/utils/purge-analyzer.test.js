@@ -1,13 +1,13 @@
-import { describe, it } from 'node:test';
 import assert from 'node:assert';
+import { describe, it } from 'node:test';
 import {
   extractClassNames,
-  shouldScanFile,
-  shouldIgnoreDirectory,
   getClassStatistics,
-  suggestDirectories,
+  IGNORED_DIRECTORIES,
   SCAN_EXTENSIONS,
-  IGNORED_DIRECTORIES
+  shouldIgnoreDirectory,
+  shouldScanFile,
+  suggestDirectories
 } from '../../../cli/utils/purge-analyzer.js';
 
 describe('purge-analyzer', () => {
@@ -79,11 +79,14 @@ describe('purge-analyzer', () => {
     });
 
     it('should ignore template interpolation markers', () => {
-      const content = '<div className={`p-4 ${dynamicClass}`}></div>';
+      // biome-ignore lint/suspicious/noTemplateCurlyInString: Testing template interpolation handling
+      // biome-ignore lint/suspicious/noUselessEscapeInString: Testing escaped interpolation markers
+      const content = '<div className={`p-4 \${dynamicClass}`}></div>';
       const classes = extractClassNames(content);
       assert(classes.has('p-4'));
-      // Should not include the interpolation itself
-      assert(!classes.has('${dynamicClass}'));
+      // biome-ignore lint/suspicious/noTemplateCurlyInString: Testing template interpolation handling
+      // biome-ignore lint/suspicious/noUselessEscapeInString: Testing escaped interpolation markers
+      assert(!classes.has('\${dynamicClass}'));
     });
 
     it('should handle empty class attributes', () => {
@@ -178,13 +181,7 @@ describe('purge-analyzer', () => {
     });
 
     it('should count modifier variants', () => {
-      const classes = new Set([
-        'flex',
-        'hover:flex',
-        'dark:text-white',
-        'md:p-4',
-        'focus:outline'
-      ]);
+      const classes = new Set(['flex', 'hover:flex', 'dark:text-white', 'md:p-4', 'focus:outline']);
       const stats = getClassStatistics(classes);
 
       assert.strictEqual(stats.total, 5);
@@ -196,14 +193,7 @@ describe('purge-analyzer', () => {
     });
 
     it('should count top prefixes', () => {
-      const classes = new Set([
-        'p-4',
-        'p-8',
-        'm-4',
-        'm-8',
-        'flex',
-        'grid'
-      ]);
+      const classes = new Set(['p-4', 'p-8', 'm-4', 'm-8', 'flex', 'grid']);
       const stats = getClassStatistics(classes);
 
       assert(stats.topPrefixes.length > 0);

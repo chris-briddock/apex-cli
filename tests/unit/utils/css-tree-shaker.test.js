@@ -1,14 +1,15 @@
 /**
  * CSS Tree Shaker Tests
  */
-import { describe, it } from 'node:test';
+
 import assert from 'node:assert';
+import { describe, it } from 'node:test';
 import {
-  parseCSS,
   extractClassesFromSelector,
+  formatBytes,
+  parseCSS,
   shouldKeepSelector,
-  treeShakeCSS,
-  formatBytes
+  treeShakeCSS
 } from '../../../cli/utils/css-tree-shaker.js';
 
 describe('css-tree-shaker', () => {
@@ -37,7 +38,7 @@ describe('css-tree-shaker', () => {
     });
 
     it('should ignore at-rules like keyframes', () => {
-      const css = String.raw`
+      const css = `
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }

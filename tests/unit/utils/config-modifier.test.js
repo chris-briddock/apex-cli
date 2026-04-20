@@ -1,20 +1,20 @@
-import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert';
-import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { afterEach, beforeEach, describe, it } from 'node:test';
 import {
-  readConfigFile,
+  buildUpdatedConfig,
   configExists,
   createBackup,
-  generateDiff,
   formatDiff,
-  updateConfigFile,
-  buildUpdatedConfig,
-  validateChanges,
+  generateConfigContent,
+  generateDiff,
   generateSummary,
   parseConfigFile,
-  generateConfigContent
+  readConfigFile,
+  updateConfigFile,
+  validateChanges
 } from '../../../cli/utils/config-modifier.js';
 
 describe('config-modifier', () => {
@@ -199,9 +199,7 @@ describe('config-modifier', () => {
       const diff = {
         totalChanges: 1,
         disabled: [],
-        enabled: [
-          { feature: 'display', oldValue: false, newValue: true }
-        ]
+        enabled: [{ feature: 'display', oldValue: false, newValue: true }]
       };
 
       const formatted = formatDiff(diff, { total: 0, featureSizes: {} });
@@ -331,10 +329,7 @@ export default {
   describe('validateChanges', () => {
     it('should warn about disabling critical features', () => {
       const diff = {
-        disabled: [
-          { feature: 'display' },
-          { feature: 'spacing' }
-        ],
+        disabled: [{ feature: 'display' }, { feature: 'spacing' }],
         enabled: []
       };
 
@@ -371,10 +366,7 @@ export default {
 
     it('should return valid for safe changes', () => {
       const diff = {
-        disabled: [
-          { feature: 'transforms3d' },
-          { feature: 'filters' }
-        ],
+        disabled: [{ feature: 'transforms3d' }, { feature: 'filters' }],
         enabled: []
       };
 
@@ -389,10 +381,7 @@ export default {
   describe('generateSummary', () => {
     it('should summarize disabled features', () => {
       const diff = {
-        disabled: [
-          { feature: 'grid' },
-          { feature: 'transforms3d' }
-        ],
+        disabled: [{ feature: 'grid' }, { feature: 'transforms3d' }],
         enabled: []
       };
 
@@ -406,9 +395,7 @@ export default {
     it('should summarize enabled features', () => {
       const diff = {
         disabled: [],
-        enabled: [
-          { feature: 'display' }
-        ]
+        enabled: [{ feature: 'display' }]
       };
 
       const summary = generateSummary(diff, 0);

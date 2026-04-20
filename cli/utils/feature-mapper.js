@@ -10,23 +10,97 @@
 export const FEATURE_MAPPINGS = {
   // Core Layout
   display: {
-    prefixes: ['block', 'inline-block', 'inline', 'flex', 'grid', 'hidden', 'table', 'table-cell', 'table-row', 'contents'],
+    prefixes: [
+      'block',
+      'inline-block',
+      'inline',
+      'flex',
+      'grid',
+      'hidden',
+      'table',
+      'table-cell',
+      'table-row',
+      'contents'
+    ],
     patterns: [/^(block|inline|inline-block|flex|grid|hidden|table|table-cell|table-row|contents)$/],
     estimatedSize: 5 // KB saved if disabled
   },
   flexbox: {
     prefixes: ['flex-', 'justify-', 'items-', 'self-', 'grow', 'shrink', 'order', 'basis-'],
-    patterns: [/^flex-(row|col|wrap|nowrap|none|1|auto|initial|grow|shrink)/, /^justify-(start|end|center|between|around|evenly)$/, /^items-(start|end|center|baseline|stretch)$/, /^self-(start|end|center|baseline|stretch)$/, /^grow-?/, /^shrink-?/, /^order-/, /^basis-/],
+    patterns: [
+      /^flex-(row|col|wrap|nowrap|none|1|auto|initial|grow|shrink)/,
+      /^justify-(start|end|center|between|around|evenly)$/,
+      /^items-(start|end|center|baseline|stretch)$/,
+      /^self-(start|end|center|baseline|stretch)$/,
+      /^grow-?/,
+      /^shrink-?/,
+      /^order-/,
+      /^basis-/
+    ],
     estimatedSize: 25
   },
   grid: {
-    prefixes: ['grid', 'col-', 'row-', 'gap-', 'gap-x-', 'gap-y-', 'auto-cols-', 'auto-rows-', 'grid-flow-', 'grid-cols-', 'grid-rows-'],
-    patterns: [/^grid$/, /^grid-cols-/, /^grid-rows-/, /^col-span-/, /^col-start-/, /^col-end-/, /^row-span-/, /^row-start-/, /^row-end-/, /^gap-/, /^gap-x-/, /^gap-y-/, /^grid-flow-/, /^auto-cols-/, /^auto-rows-/],
+    prefixes: [
+      'grid',
+      'col-',
+      'row-',
+      'gap-',
+      'gap-x-',
+      'gap-y-',
+      'auto-cols-',
+      'auto-rows-',
+      'grid-flow-',
+      'grid-cols-',
+      'grid-rows-'
+    ],
+    patterns: [
+      /^grid$/,
+      /^grid-cols-/,
+      /^grid-rows-/,
+      /^col-span-/,
+      /^col-start-/,
+      /^col-end-/,
+      /^row-span-/,
+      /^row-start-/,
+      /^row-end-/,
+      /^gap-/,
+      /^gap-x-/,
+      /^gap-y-/,
+      /^grid-flow-/,
+      /^auto-cols-/,
+      /^auto-rows-/
+    ],
     estimatedSize: 20
   },
   positioning: {
-    prefixes: ['static', 'fixed', 'absolute', 'relative', 'sticky', 'top-', 'right-', 'bottom-', 'left-', 'inset-', '-top-', '-right-', '-bottom-', '-left-'],
-    patterns: [/^(static|fixed|absolute|relative|sticky)$/, /^inset-/, /^top-/, /^right-/, /^bottom-/, /^left-/, /^-top-/, /^-right-/, /^-bottom-/, /^-left-/],
+    prefixes: [
+      'static',
+      'fixed',
+      'absolute',
+      'relative',
+      'sticky',
+      'top-',
+      'right-',
+      'bottom-',
+      'left-',
+      'inset-',
+      '-top-',
+      '-right-',
+      '-bottom-',
+      '-left-'
+    ],
+    patterns: [
+      /^(static|fixed|absolute|relative|sticky)$/,
+      /^inset-/,
+      /^top-/,
+      /^right-/,
+      /^bottom-/,
+      /^left-/,
+      /^-top-/,
+      /^-right-/,
+      /^-bottom-/,
+      /^-left-/
+    ],
     estimatedSize: 10
   },
   visibility: {
@@ -37,7 +111,32 @@ export const FEATURE_MAPPINGS = {
 
   // Core Spacing
   spacing: {
-    prefixes: ['p-', 'px-', 'py-', 'pt-', 'pr-', 'pb-', 'pl-', 'm-', 'mx-', 'my-', 'mt-', 'mr-', 'mb-', 'ml-', '-m-', '-mx-', '-my-', '-mt-', '-mr-', '-mb-', '-ml-', 'space-', 'space-x-', 'space-y-'],
+    prefixes: [
+      'p-',
+      'px-',
+      'py-',
+      'pt-',
+      'pr-',
+      'pb-',
+      'pl-',
+      'm-',
+      'mx-',
+      'my-',
+      'mt-',
+      'mr-',
+      'mb-',
+      'ml-',
+      '-m-',
+      '-mx-',
+      '-my-',
+      '-mt-',
+      '-mr-',
+      '-mb-',
+      '-ml-',
+      'space-',
+      'space-x-',
+      'space-y-'
+    ],
     patterns: [/^[mp][xytrbl]?-/, /^-[mp][xytrbl]?-/, /^space-[xy]-/],
     estimatedSize: 30
   },
@@ -49,15 +148,59 @@ export const FEATURE_MAPPINGS = {
 
   // Core Typography
   typography: {
-    prefixes: ['text-', 'font-', 'leading-', 'tracking-', 'uppercase', 'lowercase', 'capitalize', 'normal-case', 'truncate', 'overflow-ellipsis', 'overflow-clip', 'whitespace-', 'break-', 'hyphens-'],
-    patterns: [/^text-(xs|sm|base|lg|xl|2xl|3xl|4xl|5xl|6xl|7xl|8xl|9xl)$/, /^font-(thin|extralight|light|normal|medium|semibold|bold|extrabold|black)$/, /^leading-/, /^tracking-/, /^(uppercase|lowercase|capitalize|normal-case)$/, /^truncate$/, /^overflow-ellipsis$/, /^overflow-clip$/, /^whitespace-/, /^break-/, /^hyphens-/],
+    prefixes: [
+      'text-',
+      'font-',
+      'leading-',
+      'tracking-',
+      'uppercase',
+      'lowercase',
+      'capitalize',
+      'normal-case',
+      'truncate',
+      'overflow-ellipsis',
+      'overflow-clip',
+      'whitespace-',
+      'break-',
+      'hyphens-'
+    ],
+    patterns: [
+      /^text-(xs|sm|base|lg|xl|2xl|3xl|4xl|5xl|6xl|7xl|8xl|9xl)$/,
+      /^font-(thin|extralight|light|normal|medium|semibold|bold|extrabold|black)$/,
+      /^leading-/,
+      /^tracking-/,
+      /^(uppercase|lowercase|capitalize|normal-case)$/,
+      /^truncate$/,
+      /^overflow-ellipsis$/,
+      /^overflow-clip$/,
+      /^whitespace-/,
+      /^break-/,
+      /^hyphens-/
+    ],
     estimatedSize: 20
   },
 
   // Core Visual
   colors: {
-    prefixes: ['text-', 'bg-', 'from-', 'via-', 'to-', 'border-', 'divide-', 'ring-', 'accent-', 'caret-', 'fill-', 'stroke-', 'decoration-'],
-    patterns: [/^(text|bg|border|divide|ring|accent|caret|fill|stroke|decoration)-(primary|gray|success|warning|danger|info|white|black|transparent|current|inherit)/, /^(from|via|to)-(primary|gray|success|warning|danger|info|white|black|transparent|current)/],
+    prefixes: [
+      'text-',
+      'bg-',
+      'from-',
+      'via-',
+      'to-',
+      'border-',
+      'divide-',
+      'ring-',
+      'accent-',
+      'caret-',
+      'fill-',
+      'stroke-',
+      'decoration-'
+    ],
+    patterns: [
+      /^(text|bg|border|divide|ring|accent|caret|fill|stroke|decoration)-(primary|gray|success|warning|danger|info|white|black|transparent|current|inherit)/,
+      /^(from|via|to)-(primary|gray|success|warning|danger|info|white|black|transparent|current)/
+    ],
     estimatedSize: 35
   },
   backgrounds: {
@@ -67,7 +210,17 @@ export const FEATURE_MAPPINGS = {
   },
   borders: {
     prefixes: ['border', 'border-', 'rounded', 'rounded-', 'divide-', 'ring', 'ring-', 'ring-offset-'],
-    patterns: [/^border$/, /^border-(solid|dashed|dotted|double|hidden|none)/, /^border-[trbl]?-?/, /^rounded/, /^ring$/, /^ring-/, /^ring-offset-/, /^divide-/, /^ring-opacity-/],
+    patterns: [
+      /^border$/,
+      /^border-(solid|dashed|dotted|double|hidden|none)/,
+      /^border-[trbl]?-?/,
+      /^rounded/,
+      /^ring$/,
+      /^ring-/,
+      /^ring-offset-/,
+      /^divide-/,
+      /^ring-opacity-/
+    ],
     estimatedSize: 20
   },
   shadows: {
@@ -106,7 +259,14 @@ export const FEATURE_MAPPINGS = {
   // Extended Layout
   flexExtended: {
     prefixes: ['content-', 'justify-items-', 'justify-self-', 'place-content-', 'place-items-', 'place-self-'],
-    patterns: [/^content-(center|start|end|between|around|evenly|baseline|stretch)$/, /^justify-items-/, /^justify-self-/, /^place-content-/, /^place-items-/, /^place-self-/],
+    patterns: [
+      /^content-(center|start|end|between|around|evenly|baseline|stretch)$/,
+      /^justify-items-/,
+      /^justify-self-/,
+      /^place-content-/,
+      /^place-items-/,
+      /^place-self-/
+    ],
     estimatedSize: 8
   },
   gridExtended: {
@@ -116,7 +276,11 @@ export const FEATURE_MAPPINGS = {
   },
   float: {
     prefixes: ['float-', 'clear-', 'box-'],
-    patterns: [/^float-(left|right|none|start|end|inline-start|inline-end)$/, /^clear-(left|right|both|none|start|end|inline-start|inline-end)$/, /^box-(border|content)$/],
+    patterns: [
+      /^float-(left|right|none|start|end|inline-start|inline-end)$/,
+      /^clear-(left|right|both|none|start|end|inline-start|inline-end)$/,
+      /^box-(border|content)$/
+    ],
     estimatedSize: 3
   },
   containerQueries: {
@@ -137,8 +301,34 @@ export const FEATURE_MAPPINGS = {
 
   // Extended Typography
   typographyExtended: {
-    prefixes: ['indent-', 'align-', 'antialiased', 'subpixel-antialiased', 'tabular-nums', 'lining-nums', 'oldstyle-nums', 'proportional-nums', 'diagonal-fractions', 'stacked-fractions', 'ordinal', 'slashed-zero'],
-    patterns: [/^indent-/, /^align-(baseline|top|middle|bottom|text-top|text-bottom|sub|super)$/, /^antialiased$/, /^subpixel-antialiased$/, /^tabular-nums$/, /^lining-nums$/, /^oldstyle-nums$/, /^proportional-nums$/, /^diagonal-fractions$/, /^stacked-fractions$/, /^ordinal$/, /^slashed-zero$/],
+    prefixes: [
+      'indent-',
+      'align-',
+      'antialiased',
+      'subpixel-antialiased',
+      'tabular-nums',
+      'lining-nums',
+      'oldstyle-nums',
+      'proportional-nums',
+      'diagonal-fractions',
+      'stacked-fractions',
+      'ordinal',
+      'slashed-zero'
+    ],
+    patterns: [
+      /^indent-/,
+      /^align-(baseline|top|middle|bottom|text-top|text-bottom|sub|super)$/,
+      /^antialiased$/,
+      /^subpixel-antialiased$/,
+      /^tabular-nums$/,
+      /^lining-nums$/,
+      /^oldstyle-nums$/,
+      /^proportional-nums$/,
+      /^diagonal-fractions$/,
+      /^stacked-fractions$/,
+      /^ordinal$/,
+      /^slashed-zero$/
+    ],
     estimatedSize: 15
   },
   fontExtended: {
@@ -149,8 +339,28 @@ export const FEATURE_MAPPINGS = {
 
   // Extended Visual
   backgroundExtended: {
-    prefixes: ['bg-clip-', 'bg-origin-', 'bg-center', 'bg-top', 'bg-right', 'bg-bottom', 'bg-left', 'bg-repeat', 'bg-no-repeat', 'bg-auto', 'bg-cover', 'bg-contain', 'bg-fixed', 'bg-local', 'bg-scroll'],
-    patterns: [/^bg-clip-/, /^bg-origin-/, /^bg-(center|top|right|bottom|left|repeat|no-repeat|auto|cover|contain|fixed|local|scroll)$/],
+    prefixes: [
+      'bg-clip-',
+      'bg-origin-',
+      'bg-center',
+      'bg-top',
+      'bg-right',
+      'bg-bottom',
+      'bg-left',
+      'bg-repeat',
+      'bg-no-repeat',
+      'bg-auto',
+      'bg-cover',
+      'bg-contain',
+      'bg-fixed',
+      'bg-local',
+      'bg-scroll'
+    ],
+    patterns: [
+      /^bg-clip-/,
+      /^bg-origin-/,
+      /^bg-(center|top|right|bottom|left|repeat|no-repeat|auto|cover|contain|fixed|local|scroll)$/
+    ],
     estimatedSize: 8
   },
   blendModes: {
@@ -181,13 +391,55 @@ export const FEATURE_MAPPINGS = {
     estimatedSize: 20
   },
   transforms3d: {
-    prefixes: ['perspective-', 'preserve-3d', 'transform-style-', 'backface-', 'rotate-x', 'rotate-y', 'rotate-z', 'translate-z', 'scale-z'],
-    patterns: [/^perspective-/, /^preserve-3d$/, /^transform-style-/, /^backface-/, /^rotate-[xyz]-/, /^translate-[xyz]-/, /^scale-[xyz]-/],
+    prefixes: [
+      'perspective-',
+      'preserve-3d',
+      'transform-style-',
+      'backface-',
+      'rotate-x',
+      'rotate-y',
+      'rotate-z',
+      'translate-z',
+      'scale-z'
+    ],
+    patterns: [
+      /^perspective-/,
+      /^preserve-3d$/,
+      /^transform-style-/,
+      /^backface-/,
+      /^rotate-[xyz]-/,
+      /^translate-[xyz]-/,
+      /^scale-[xyz]-/
+    ],
     estimatedSize: 12
   },
   filters: {
-    prefixes: ['blur-', 'brightness-', 'contrast-', 'grayscale', 'hue-', 'invert', 'saturate-', 'sepia', 'drop-shadow-', 'backdrop-'],
-    patterns: [/^blur-/, /^brightness-/, /^contrast-/, /^grayscale$/, /^hue-rotate-/, /^invert$/, /^saturate-/, /^sepia$/, /^drop-shadow-/, /^backdrop-/, /^grayscale-/, /^invert-/],
+    prefixes: [
+      'blur-',
+      'brightness-',
+      'contrast-',
+      'grayscale',
+      'hue-',
+      'invert',
+      'saturate-',
+      'sepia',
+      'drop-shadow-',
+      'backdrop-'
+    ],
+    patterns: [
+      /^blur-/,
+      /^brightness-/,
+      /^contrast-/,
+      /^grayscale$/,
+      /^hue-rotate-/,
+      /^invert$/,
+      /^saturate-/,
+      /^sepia$/,
+      /^drop-shadow-/,
+      /^backdrop-/,
+      /^grayscale-/,
+      /^invert-/
+    ],
     estimatedSize: 18
   },
   aspectRatio: {
@@ -198,8 +450,25 @@ export const FEATURE_MAPPINGS = {
 
   // State Variants
   states: {
-    prefixes: ['hover:', 'focus:', 'active:', 'disabled:', 'visited:', 'checked:', 'first:', 'last:', 'odd:', 'even:', 'group-hover:', 'group-focus:', 'peer-hover:', 'peer-focus:'],
-    patterns: [/^(hover|focus|active|disabled|visited|checked|first|last|odd|even|group-hover|group-focus|peer-hover|peer-focus):/],
+    prefixes: [
+      'hover:',
+      'focus:',
+      'active:',
+      'disabled:',
+      'visited:',
+      'checked:',
+      'first:',
+      'last:',
+      'odd:',
+      'even:',
+      'group-hover:',
+      'group-focus:',
+      'peer-hover:',
+      'peer-focus:'
+    ],
+    patterns: [
+      /^(hover|focus|active|disabled|visited|checked|first|last|odd|even|group-hover|group-focus|peer-hover|peer-focus):/
+    ],
     estimatedSize: 10
   },
 

@@ -27,8 +27,8 @@ function extractMediaQueries(css) {
   let remainingCss = css;
   let offset = 0;
 
-  let mediaMatch;
-  while ((mediaMatch = mediaQueryPattern.exec(remainingCss)) !== null) {
+  let mediaMatch = mediaQueryPattern.exec(remainingCss);
+  while (mediaMatch !== null) {
     const mediaStart = offset + mediaMatch.index;
     const mediaCondition = mediaMatch[0].slice(0, -1).trim();
 
@@ -55,6 +55,9 @@ function extractMediaQueries(css) {
     // Update offset and remaining CSS
     offset = mediaEnd;
     remainingCss = css.slice(offset);
+
+    // Find next media query
+    mediaMatch = mediaQueryPattern.exec(remainingCss);
   }
 
   return mediaQueries;
@@ -164,7 +167,7 @@ export function shouldKeepSelector(selector, usedClasses) {
     /^@/, // At-rules
     /^from\b/, // @keyframes from
     /^to\b/, // @keyframes to
-    /^\d+%/, // @keyframes percentage
+    /^\d+%/ // @keyframes percentage
   ];
 
   for (const pattern of alwaysKeep) {

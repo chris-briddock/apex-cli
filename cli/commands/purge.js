@@ -5,26 +5,19 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { loadConfig } from '../utils/config-loader.js';
-import { detectFramework } from '../utils/framework-detector.js';
-import { logger } from '../utils/logger.js';
-import {
-  scanDirectories,
-  getClassStatistics,
-  suggestDirectories
-} from '../utils/purge-analyzer.js';
-import {
-  analyzeFeatureUsage,
-  FEATURE_MAPPINGS
-} from '../utils/feature-mapper.js';
 import {
   configExists,
   createBackup,
-  generateDiff,
   formatDiff,
+  generateDiff,
+  generateSummary,
   updateConfigFile,
-  validateChanges,
-  generateSummary
+  validateChanges
 } from '../utils/config-modifier.js';
+import { analyzeFeatureUsage, FEATURE_MAPPINGS } from '../utils/feature-mapper.js';
+import { detectFramework } from '../utils/framework-detector.js';
+import { logger } from '../utils/logger.js';
+import { getClassStatistics, scanDirectories, suggestDirectories } from '../utils/purge-analyzer.js';
 
 /**
  * Default source directories to scan
@@ -242,7 +235,9 @@ export async function purgeCommand(options) {
     process.exit(0);
   }
 
-  logger.success(`Found ${analysis.usedFeatures.length} used features, ${analysis.unusedFeatures.length} unused features`);
+  logger.success(
+    `Found ${analysis.usedFeatures.length} used features, ${analysis.unusedFeatures.length} unused features`
+  );
   logger.newline();
 
   // Calculate potential savings
@@ -289,7 +284,7 @@ export async function purgeCommand(options) {
   }
 
   // Confirm changes (unless --yes flag)
-  const shouldApply = options.yes || await promptForConfirmation(configPath);
+  const shouldApply = options.yes || (await promptForConfirmation(configPath));
 
   if (!shouldApply) {
     logger.info('Changes cancelled');
@@ -310,7 +305,9 @@ export async function purgeCommand(options) {
   logger.info('Next steps:');
   logger.info('  1. Run "npx apexcss build" to generate optimized CSS');
   logger.info('  2. Test your application to ensure styles work correctly');
-  logger.info(`  3. If issues occur, restore from backup: cp ${options.configPath || './apex.config.js'}.backup ${options.configPath || './apex.config.js'}`);
+  logger.info(
+    `  3. If issues occur, restore from backup: cp ${options.configPath || './apex.config.js'}.backup ${options.configPath || './apex.config.js'}`
+  );
 
   const duration = Date.now() - startTime;
   logger.newline();

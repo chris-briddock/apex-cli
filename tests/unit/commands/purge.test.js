@@ -1,8 +1,8 @@
-import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert';
-import { mkdtemp, writeFile, mkdir, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { afterEach, beforeEach, describe, it } from 'node:test';
 import { purgeCommand } from '../../../cli/commands/purge.js';
 
 describe('purge command', () => {
@@ -17,7 +17,7 @@ describe('purge command', () => {
     exitCode = null;
 
     // Mock process.exit
-    process.exit = (code) => {
+    process.exit = code => {
       exitCode = code;
       throw new Error(`process.exit(${code})`);
     };
@@ -31,10 +31,11 @@ describe('purge command', () => {
   describe('config validation', () => {
     it('should exit when config file not found', async () => {
       await assert.rejects(
-        async () => purgeCommand({
-          configPath: './nonexistent.config.js',
-          src: './src'
-        }),
+        async () =>
+          purgeCommand({
+            configPath: './nonexistent.config.js',
+            src: './src'
+          }),
         /process\.exit\(1\)/
       );
       assert.strictEqual(exitCode, 1);
@@ -42,17 +43,11 @@ describe('purge command', () => {
 
     it('should proceed when config file exists', async () => {
       // Create minimal config
-      await writeFile(
-        join(tempDir, 'apex.config.js'),
-        'export default { features: { display: true } };'
-      );
+      await writeFile(join(tempDir, 'apex.config.js'), 'export default { features: { display: true } };');
 
       // Create minimal source
       await mkdir(join(tempDir, 'src'), { recursive: true });
-      await writeFile(
-        join(tempDir, 'src', 'index.html'),
-        '<div class="flex"></div>'
-      );
+      await writeFile(join(tempDir, 'src', 'index.html'), '<div class="flex"></div>');
 
       // Should not throw for missing config
       try {
@@ -71,32 +66,24 @@ describe('purge command', () => {
 
   describe('source directory handling', () => {
     it('should exit when no source directories found', async () => {
-      await writeFile(
-        join(tempDir, 'apex.config.js'),
-        'export default { features: { display: true } };'
-      );
+      await writeFile(join(tempDir, 'apex.config.js'), 'export default { features: { display: true } };');
 
       await assert.rejects(
-        async () => purgeCommand({
-          configPath: './apex.config.js',
-          src: './nonexistent'
-        }),
+        async () =>
+          purgeCommand({
+            configPath: './apex.config.js',
+            src: './nonexistent'
+          }),
         /process\.exit\(1\)/
       );
       assert.strictEqual(exitCode, 1);
     });
 
     it('should accept custom source directories', async () => {
-      await writeFile(
-        join(tempDir, 'apex.config.js'),
-        'export default { features: { display: true } };'
-      );
+      await writeFile(join(tempDir, 'apex.config.js'), 'export default { features: { display: true } };');
 
       await mkdir(join(tempDir, 'custom-src'), { recursive: true });
-      await writeFile(
-        join(tempDir, 'custom-src', 'index.html'),
-        '<div class="flex"></div>'
-      );
+      await writeFile(join(tempDir, 'custom-src', 'index.html'), '<div class="flex"></div>');
 
       // Should not throw for config not found
       try {
@@ -114,21 +101,12 @@ describe('purge command', () => {
     });
 
     it('should accept multiple source directories', async () => {
-      await writeFile(
-        join(tempDir, 'apex.config.js'),
-        'export default { features: { display: true } };'
-      );
+      await writeFile(join(tempDir, 'apex.config.js'), 'export default { features: { display: true } };');
 
       await mkdir(join(tempDir, 'src'), { recursive: true });
       await mkdir(join(tempDir, 'components'), { recursive: true });
-      await writeFile(
-        join(tempDir, 'src', 'index.html'),
-        '<div class="flex"></div>'
-      );
-      await writeFile(
-        join(tempDir, 'components', 'Button.jsx'),
-        '<button className="p-4"></button>'
-      );
+      await writeFile(join(tempDir, 'src', 'index.html'), '<div class="flex"></div>');
+      await writeFile(join(tempDir, 'components', 'Button.jsx'), '<button className="p-4"></button>');
 
       // Should not throw for config not found
       try {
@@ -154,10 +132,7 @@ describe('purge command', () => {
       );
 
       await mkdir(join(tempDir, 'src'), { recursive: true });
-      await writeFile(
-        join(tempDir, 'src', 'index.html'),
-        '<div class="flex items-center p-4 m-2"></div>'
-      );
+      await writeFile(join(tempDir, 'src', 'index.html'), '<div class="flex items-center p-4 m-2"></div>');
 
       // Command should complete (may throw via process.exit mock which is expected)
       await purgeCommand({
@@ -168,10 +143,7 @@ describe('purge command', () => {
     });
 
     it('should detect classes from JSX files', async () => {
-      await writeFile(
-        join(tempDir, 'apex.config.js'),
-        'export default { features: { display: true, colors: true } };'
-      );
+      await writeFile(join(tempDir, 'apex.config.js'), 'export default { features: { display: true, colors: true } };');
 
       await mkdir(join(tempDir, 'src'), { recursive: true });
       await writeFile(
@@ -188,23 +160,18 @@ describe('purge command', () => {
     });
 
     it('should warn when no classes detected', async () => {
-      await writeFile(
-        join(tempDir, 'apex.config.js'),
-        'export default { features: { display: true } };'
-      );
+      await writeFile(join(tempDir, 'apex.config.js'), 'export default { features: { display: true } };');
 
       await mkdir(join(tempDir, 'src'), { recursive: true });
-      await writeFile(
-        join(tempDir, 'src', 'empty.html'),
-        '<div>No classes here</div>'
-      );
+      await writeFile(join(tempDir, 'src', 'empty.html'), '<div>No classes here</div>');
 
       // Should exit gracefully when no classes found
       await assert.rejects(
-        async () => purgeCommand({
-          configPath: './apex.config.js',
-          src: './src'
-        }),
+        async () =>
+          purgeCommand({
+            configPath: './apex.config.js',
+            src: './src'
+          }),
         /process\.exit\(0\)/
       );
       assert.strictEqual(exitCode, 0);
@@ -223,10 +190,7 @@ describe('purge command', () => {
       await writeFile(join(tempDir, 'apex.config.js'), configContent);
 
       await mkdir(join(tempDir, 'src'), { recursive: true });
-      await writeFile(
-        join(tempDir, 'src', 'index.html'),
-        '<div class="flex"></div>'
-      );
+      await writeFile(join(tempDir, 'src', 'index.html'), '<div class="flex"></div>');
 
       // Command should complete (may throw via process.exit mock which is expected)
       try {
@@ -240,24 +204,19 @@ describe('purge command', () => {
       }
 
       // Config should remain unchanged
-      const afterContent = await import('node:fs/promises')
-        .then(m => m.readFile(join(tempDir, 'apex.config.js'), 'utf-8'));
+      const afterContent = await import('node:fs/promises').then(m =>
+        m.readFile(join(tempDir, 'apex.config.js'), 'utf-8')
+      );
       assert(afterContent.includes('transforms3d: true'));
     });
   });
 
   describe('option handling', () => {
     it('should handle verbose flag', async () => {
-      await writeFile(
-        join(tempDir, 'apex.config.js'),
-        'export default { features: { display: true } };'
-      );
+      await writeFile(join(tempDir, 'apex.config.js'), 'export default { features: { display: true } };');
 
       await mkdir(join(tempDir, 'src'), { recursive: true });
-      await writeFile(
-        join(tempDir, 'src', 'index.html'),
-        '<div class="flex p-4 text-lg"></div>'
-      );
+      await writeFile(join(tempDir, 'src', 'index.html'), '<div class="flex p-4 text-lg"></div>');
 
       // Command should complete (may throw via process.exit mock which is expected)
       await purgeCommand({
@@ -269,16 +228,10 @@ describe('purge command', () => {
     });
 
     it('should handle backup flag', async () => {
-      await writeFile(
-        join(tempDir, 'apex.config.js'),
-        'export default { features: { display: true } };'
-      );
+      await writeFile(join(tempDir, 'apex.config.js'), 'export default { features: { display: true } };');
 
       await mkdir(join(tempDir, 'src'), { recursive: true });
-      await writeFile(
-        join(tempDir, 'src', 'index.html'),
-        '<div class="flex"></div>'
-      );
+      await writeFile(join(tempDir, 'src', 'index.html'), '<div class="flex"></div>');
 
       // Command should complete (may throw via process.exit mock which is expected)
       await purgeCommand({
@@ -290,16 +243,10 @@ describe('purge command', () => {
     });
 
     it('should handle yes flag for auto-apply', async () => {
-      await writeFile(
-        join(tempDir, 'apex.config.js'),
-        'export default { features: { display: true } };'
-      );
+      await writeFile(join(tempDir, 'apex.config.js'), 'export default { features: { display: true } };');
 
       await mkdir(join(tempDir, 'src'), { recursive: true });
-      await writeFile(
-        join(tempDir, 'src', 'index.html'),
-        '<div class="flex"></div>'
-      );
+      await writeFile(join(tempDir, 'src', 'index.html'), '<div class="flex"></div>');
 
       // Command should complete (may throw via process.exit mock which is expected)
       await purgeCommand({
@@ -312,21 +259,12 @@ describe('purge command', () => {
 
   describe('framework detection', () => {
     it('should auto-detect framework from package.json', async () => {
-      await writeFile(
-        join(tempDir, 'package.json'),
-        JSON.stringify({ dependencies: { react: '^18.0.0' } })
-      );
+      await writeFile(join(tempDir, 'package.json'), JSON.stringify({ dependencies: { react: '^18.0.0' } }));
 
-      await writeFile(
-        join(tempDir, 'apex.config.js'),
-        'export default { features: { display: true } };'
-      );
+      await writeFile(join(tempDir, 'apex.config.js'), 'export default { features: { display: true } };');
 
       await mkdir(join(tempDir, 'src'), { recursive: true });
-      await writeFile(
-        join(tempDir, 'src', 'App.jsx'),
-        '<div className="flex"></div>'
-      );
+      await writeFile(join(tempDir, 'src', 'App.jsx'), '<div className="flex"></div>');
 
       // Command should complete (may throw via process.exit mock which is expected)
       await purgeCommand({
@@ -336,16 +274,10 @@ describe('purge command', () => {
     });
 
     it('should fall back to common directories when no framework detected', async () => {
-      await writeFile(
-        join(tempDir, 'apex.config.js'),
-        'export default { features: { display: true } };'
-      );
+      await writeFile(join(tempDir, 'apex.config.js'), 'export default { features: { display: true } };');
 
       await mkdir(join(tempDir, 'src'), { recursive: true });
-      await writeFile(
-        join(tempDir, 'src', 'index.html'),
-        '<div class="flex"></div>'
-      );
+      await writeFile(join(tempDir, 'src', 'index.html'), '<div class="flex"></div>');
 
       // Command should complete (may throw via process.exit mock which is expected)
       await purgeCommand({

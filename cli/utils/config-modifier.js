@@ -3,8 +3,8 @@
  * Handles reading, diffing, and modifying apex.config.js files
  */
 
-import { copyFile, readFile, writeFile, access } from 'node:fs/promises';
 import { constants } from 'node:fs';
+import { access, copyFile, readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 /**
@@ -91,10 +91,7 @@ export function formatDiff(diff, savings) {
   ];
 
   if (diff.disabled.length > 0) {
-    lines.push(
-      '📦 Features to DISABLE (not detected in codebase):',
-      ''
-    );
+    lines.push('📦 Features to DISABLE (not detected in codebase):', '');
 
     for (const change of diff.disabled) {
       const size = savings?.featureSizes?.[change.feature] || 0;
@@ -106,10 +103,7 @@ export function formatDiff(diff, savings) {
   }
 
   if (diff.enabled.length > 0) {
-    lines.push(
-      '✅ Features to ENABLE:',
-      ''
-    );
+    lines.push('✅ Features to ENABLE:', '');
 
     for (const change of diff.enabled) {
       lines.push(`   • ${change.feature}`);
@@ -119,17 +113,11 @@ export function formatDiff(diff, savings) {
   }
 
   if (diff.totalChanges === 0) {
-    lines.push(
-      '✨ No changes needed - configuration is already optimized!',
-      ''
-    );
+    lines.push('✨ No changes needed - configuration is already optimized!', '');
   } else {
     const totalSavings = savings?.total || 0;
     if (totalSavings > 0) {
-      lines.push(
-        `📊 Estimated bundle size reduction: ~${totalSavings}KB`,
-        ''
-      );
+      lines.push(`📊 Estimated bundle size reduction: ~${totalSavings}KB`, '');
     }
   }
 
@@ -181,10 +169,7 @@ function updateFeaturesInContent(content, oldFeatures, newFeatures) {
 
       // Match the feature key followed by colon and the old value
       // Handle both: `feature: true,` and `feature: true`
-      const pattern = new RegExp(
-        String.raw`(${feature}\s*:\s*)(${oldValueStr})(\s*,?)`,
-        'g'
-      );
+      const pattern = new RegExp(String.raw`(${feature}\s*:\s*)(${oldValueStr})(\s*,?)`, 'g');
 
       const replacement = `$1${newValue === true ? 'true' : 'false'}$3`;
       updatedContent = updatedContent.replace(pattern, replacement);
