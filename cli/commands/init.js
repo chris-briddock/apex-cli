@@ -340,6 +340,31 @@ export function getImportStatement(frameworkId, _outputDir) {
 }
 
 /**
+ * Find the insertion point for an import statement in JS content
+ * @param {string} content - File content
+ * @param {string} importStatement - Import statement to add
+ * @returns {string} New content with import inserted
+ */
+export function insertJsImport(content, importStatement) {
+  const lines = content.split('\n');
+  let lastImportIndex = -1;
+
+  for (let i = 0; i < lines.length; i++) {
+    const trimmedLine = lines[i].trim();
+    if (trimmedLine.startsWith('import ') || trimmedLine.includes('require(')) {
+      lastImportIndex = i;
+    }
+  }
+
+  if (lastImportIndex >= 0) {
+    lines.splice(lastImportIndex + 1, 0, importStatement.trim());
+    return lines.join('\n');
+  }
+
+  return importStatement + content;
+}
+
+/**
  * Add import statement to a file
  * @param {string} filePath - Path to the file
  * @param {string} importStatement - Import statement to add
@@ -361,32 +386,21 @@ export function addImportToFile(filePath, importStatement, frameworkId) {
   if (isCSSFile) {
     // For CSS files, add cascade layer imports at the top
     newContent = importStatement + content;
-  } else if (
-    frameworkId === 'react' ||
-    frameworkId === 'vue' ||
-    frameworkId === 'svelte' ||
-    frameworkId === 'astro' ||
-    frameworkId === 'vanilla'
-  ) {
-    // Add after other JS imports, before code
-    const lines = content.split('\n');
-    let lastImportIndex = -1;
-
-    for (let i = 0; i < lines.length; i++) {
-      if (lines[i].trim().startsWith('import ') || lines[i].trim().startsWith('require(')) {
-        lastImportIndex = i;
+  } else {
+    switch (frameworkId) {
+      case 'react':
+      case 'vue':
+      case 'svelte':
+      case 'astro':
+      case 'vanilla': {
+        newContent = insertJsImport(content, importStatement);
+        break;
+      }
+      default: {
+        // Default: add at the top
+        newContent = importStatement + content;
       }
     }
-
-    if (lastImportIndex >= 0) {
-      lines.splice(lastImportIndex + 1, 0, importStatement.trim());
-      newContent = lines.join('\n');
-    } else {
-      newContent = importStatement + content;
-    }
-  } else {
-    // Default: add at the top
-    newContent = importStatement + content;
   }
 
   writeFileSync(filePath, newContent);

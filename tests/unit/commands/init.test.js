@@ -7,7 +7,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
-import { addImportToFile, getImportStatement } from '../../../cli/commands/init.js';
+import { addImportToFile, getImportStatement, insertJsImport } from '../../../cli/commands/init.js';
 
 describe('init command', () => {
   let tempDir;
@@ -160,6 +160,65 @@ describe('init command', () => {
       // Just verify the import was added - the function inserts after last import/require
       assert.ok(content.includes("import './apex.css';"));
       assert.ok(content.includes("require('react')"));
+    });
+  });
+
+  describe('insertJsImport', () => {
+    it('should insert import after last import statement', () => {
+      const content = "import React from 'react';\nimport { useState } from 'react';\n\nconst App = () => {};";
+      const importStatement = "import './apex.css';\n";
+
+      const result = insertJsImport(content, importStatement);
+
+      const lines = result.split('\n');
+      assert.strictEqual(lines[0], "import React from 'react';");
+      assert.strictEqual(lines[1], "import { useState } from 'react';");
+      assert.strictEqual(lines[2], "import './apex.css';");
+    });
+
+    it('should insert import after require statement', () => {
+      const content = "const React = require('react');\n\nconst App = () => {};";
+      const importStatement = "import './apex.css';\n";
+
+      const result = insertJsImport(content, importStatement);
+
+      const lines = result.split('\n');
+      assert.strictEqual(lines[0], "const React = require('react');");
+      assert.strictEqual(lines[1], "import './apex.css';");
+    });
+
+    it('should add import at beginning if no imports exist', () => {
+      const content = 'const App = () => {};\nconst x = 1;';
+      const importStatement = "import './apex.css';\n";
+
+      const result = insertJsImport(content, importStatement);
+
+      assert.ok(result.startsWith("import './apex.css';"));
+      assert.ok(result.includes('const App = () => {};'));
+    });
+
+    it('should handle mixed import and require statements', () => {
+      const content = "import React from 'react';\nconst lodash = require('lodash');\n\nconst App = () => {};";
+      const importStatement = "import './apex.css';\n";
+
+      const result = insertJsImport(content, importStatement);
+
+      const lines = result.split('\n');
+      assert.strictEqual(lines[0], "import React from 'react';");
+      assert.strictEqual(lines[1], "const lodash = require('lodash');");
+      assert.strictEqual(lines[2], "import './apex.css';");
+    });
+
+    it('should preserve original content structure', () => {
+      const content = "import React from 'react';\n\nconst App = () => {\n  return null;\n};";
+      const importStatement = "import './apex.css';\n";
+
+      const result = insertJsImport(content, importStatement);
+
+      assert.ok(result.includes("import React from 'react';"));
+      assert.ok(result.includes("import './apex.css';"));
+      assert.ok(result.includes('const App = () => {'));
+      assert.ok(result.includes('return null;'));
     });
   });
 });

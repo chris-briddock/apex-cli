@@ -7,11 +7,7 @@ import { existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
-import {
-  determineSourceDir,
-  parseLayers,
-  writeConfigFiles
-} from '../../../cli/commands/build.js';
+import { determineSourceDir, parseLayers, writeConfigFiles } from '../../../cli/commands/build.js';
 
 describe('build command', () => {
   let tempDir;
@@ -72,7 +68,7 @@ describe('build command', () => {
     it('should write config files', () => {
       const testSourceDir = join(process.cwd(), 'test-source');
       const testSourceConfigDir = join(testSourceDir, 'config');
-      
+
       mkdirSync(testSourceConfigDir, { recursive: true });
 
       writeConfigFiles('$test: true;', testSourceDir);

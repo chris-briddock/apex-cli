@@ -107,6 +107,60 @@ apexcss-cli watch --config=./custom.config.js
 apexcss-cli doctor
 ```
 
+### Purge (Optimize Bundle Size)
+
+The `purge` command analyzes your project's source files and automatically disables unused ApexCSS features to reduce bundle size.
+
+```bash
+# Analyze project and show optimization report
+apexcss-cli purge
+
+# Dry run - show changes without applying
+apexcss-cli purge --dry-run
+
+# Auto-apply changes without confirmation
+apexcss-cli purge --yes
+
+# Scan specific directories
+apexcss-cli purge --src=./src,./components
+
+# Create backup before modifying
+apexcss-cli purge --backup
+
+# Show detailed class usage statistics
+apexcss-cli purge --verbose
+```
+
+**How it works:**
+1. Scans your HTML, JSX, Vue, Svelte, and Astro files
+2. Extracts all CSS class names used in your project
+3. Maps detected classes to ApexCSS features
+4. Identifies features that are enabled but not used
+5. Shows you which features can be safely disabled
+6. Updates your `apex.config.js` to disable unused features
+
+**Example output:**
+```
+╔══════════════════════════════════════════════════════════════╗
+║              Proposed Configuration Changes                   ║
+╚══════════════════════════════════════════════════════════════╝
+
+📦 Features to DISABLE (not detected in codebase):
+
+   • transforms3d     (~12KB)
+   • filters          (~8KB)
+   • typographyExtended (~15KB)
+
+📊 Estimated bundle size reduction: ~35KB
+
+Apply these changes to apex.config.js? (Y/n)
+```
+
+**Warning:** Always test your application after purging. If styles are missing, you can restore the backup:
+```bash
+cp apex.config.js.backup apex.config.js
+```
+
 ## CLI Options
 
 | Option | Description | Default |
@@ -129,6 +183,15 @@ apexcss-cli doctor
 |--------|-------------|---------|
 | `--format <format>` | Output format (css, scss) | `css` |
 | `-l, --layer <layers>` | Build specific layers (base, utilities, themes, all) | `all` |
+
+**`purge` command:**
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--src <dirs>` | Comma-separated source directories to scan | Auto-detect |
+| `--dry-run` | Show changes without applying | `false` |
+| `-y, --yes` | Skip confirmation prompt | `false` |
+| `--backup` | Create backup before modifying config | `false` |
+| `-v, --verbose` | Show detailed class usage statistics | `false` |
 
 ## Configuration
 
@@ -309,6 +372,16 @@ Current test coverage:
    - Monitors your config file for changes
    - Automatically rebuilds on change
    - Handles concurrent changes gracefully
+
+4. **Purge/Optimization** (`apexcss-cli purge`):
+   - Scans your project's source files (HTML, JSX, Vue, etc.)
+   - Extracts all CSS class names used
+   - Maps classes to ApexCSS feature categories
+   - Identifies enabled features with zero usage
+   - Generates a diff showing potential savings
+   - Updates config file to disable unused features
+   - Creates backup if requested
+   - Shows summary of changes and next steps
 
 ## License
 

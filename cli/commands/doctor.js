@@ -35,19 +35,26 @@ export async function doctorCommand() {
   let hasWarnings = false;
 
   for (const result of results) {
-    if (result.status === 'ok') {
-      logger.success(`${result.name}: ${result.message}`);
-    } else if (result.status === 'warn') {
-      hasWarnings = true;
-      logger.warn(`${result.name}: ${result.message}`);
-      if (result.fix) {
-        logger.info(`  Fix: ${result.fix}`);
+    switch (result.status) {
+      case 'ok': {
+        logger.success(`${result.name}: ${result.message}`);
+        break;
       }
-    } else if (result.status === 'error') {
-      hasErrors = true;
-      logger.error(`${result.name}: ${result.message}`);
-      if (result.fix) {
-        logger.info(`  Fix: ${result.fix}`);
+      case 'warn': {
+        hasWarnings = true;
+        logger.warn(`${result.name}: ${result.message}`);
+        if (result.fix) {
+          logger.info(`  Fix: ${result.fix}`);
+        }
+        break;
+      }
+      case 'error': {
+        hasErrors = true;
+        logger.error(`${result.name}: ${result.message}`);
+        if (result.fix) {
+          logger.info(`  Fix: ${result.fix}`);
+        }
+        break;
       }
     }
   }
@@ -72,27 +79,20 @@ function checkNodeVersion() {
   const nodeVersion = process.version;
   const majorVersion = Number.parseInt(nodeVersion.slice(1).split('.')[0], 10);
 
-  if (majorVersion >= 18) {
+  if (majorVersion >= 22) {
     return {
       name: 'Node.js',
       status: 'ok',
       message: `v${nodeVersion} (supported)`
     };
-  } else if (majorVersion >= 16) {
-    return {
-      name: 'Node.js',
-      status: 'warn',
-      message: `v${nodeVersion} (minimum recommended is v18+)`,
-      fix: 'Upgrade to Node.js v18 or later'
-    };
-  } else {
-    return {
-      name: 'Node.js',
-      status: 'error',
-      message: `v${nodeVersion} (not supported)`,
-      fix: 'Upgrade to Node.js v18 or later'
-    };
   }
+
+  return {
+    name: 'Node.js',
+    status: 'error',
+    message: `v${nodeVersion} (not supported)`,
+    fix: 'Upgrade to Node.js v22 or later'
+  };
 }
 
 /**
