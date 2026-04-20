@@ -19,9 +19,6 @@
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const __filename = fileURLToPath(import.meta.url);
 
 const LOG_PREFIX = '[apex-config-builder]';
 
@@ -2022,7 +2019,7 @@ async function watch(options) {
   });
 }
 
-// Main execution
+// Main execution - only run when executed directly
 async function main() {
   const options = parseArgs();
 
@@ -2038,7 +2035,9 @@ async function main() {
   }
 }
 
-// Execute main
-await main();
+// Execute main only when run directly (not when imported)
+if (import.meta.url === `file://${process.argv[1]}`) {
+  await main();
+}
 
 export { build, defaultConfig, generateSCSS, isObject, mergeDeep, validateUserConfig };

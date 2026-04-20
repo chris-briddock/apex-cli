@@ -5,6 +5,7 @@ import { Command } from 'commander';
 import { buildCommand } from './commands/build.js';
 import { doctorCommand } from './commands/doctor.js';
 import { initCommand } from './commands/init.js';
+import { purgeCommand } from './commands/purge.js';
 import { watchCommand } from './commands/watch.js';
 import { logger } from './utils/logger.js';
 
@@ -107,6 +108,31 @@ export function cli(args) {
     .action(async () => {
       try {
         await doctorCommand();
+      } catch (error) {
+        logger.error(error.message);
+        process.exit(1);
+      }
+    });
+
+  // Purge command
+  program
+    .command('purge')
+    .description('Analyze project and optimize ApexCSS configuration by removing unused features')
+    .option('--src <dirs>', 'comma-separated source directories to scan (default: auto-detect)')
+    .option('--dry-run', 'show changes without applying them')
+    .option('-y, --yes', 'skip confirmation and apply changes automatically')
+    .option('--backup', 'create backup before modifying config')
+    .option('-v, --verbose', 'show detailed class usage statistics')
+    .action(async options => {
+      try {
+        await purgeCommand({
+          configPath: program.opts().config,
+          src: options.src,
+          dryRun: options.dryRun,
+          yes: options.yes,
+          backup: options.backup,
+          verbose: options.verbose
+        });
       } catch (error) {
         logger.error(error.message);
         process.exit(1);
