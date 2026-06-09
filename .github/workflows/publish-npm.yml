@@ -42,19 +42,22 @@ jobs:
       - name: Run tests
         run: npm test --if-present
 
+      - name: Build TypeScript
+        run: npm run build
+
       - name: Verify CLI binary is executable
         run: |
           echo "Verifying CLI binary..."
-          test -f bin/apexcss-cli.js || (echo "bin/apexcss-cli.js not found" && exit 1)
-          test -x bin/apexcss-cli.js || chmod +x bin/apexcss-cli.js
+          test -f dist/bin/apexcss-cli.js || (echo "dist/bin/apexcss-cli.js not found" && exit 1)
+          test -x dist/bin/apexcss-cli.js || chmod +x dist/bin/apexcss-cli.js
           echo "CLI binary verified"
 
       - name: Test CLI commands
         run: |
           echo "Testing CLI commands..."
-          node bin/apexcss-cli.js --version
-          node bin/apexcss-cli.js --help
-          node bin/apexcss-cli.js doctor
+          node dist/bin/apexcss-cli.js --version
+          node dist/bin/apexcss-cli.js --help
+          node dist/bin/apexcss-cli.js doctor
           echo "CLI commands working"
 
   # ============================================
@@ -81,11 +84,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build TypeScript
+        run: npm run build
+
       - name: Verify CLI binary
         run: |
           echo "Verifying CLI binary..."
-          test -f bin/apexcss-cli.js || (echo "bin/apexcss-cli.js not found" && exit 1)
-          chmod +x bin/apexcss-cli.js
+          test -f dist/bin/apexcss-cli.js || (echo "dist/bin/apexcss-cli.js not found" && exit 1)
+          chmod +x dist/bin/apexcss-cli.js
           echo "CLI binary ready"
 
       - name: Check if version exists on NPM
