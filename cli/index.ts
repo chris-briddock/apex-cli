@@ -16,9 +16,15 @@ const __dirname = dirname(__filename);
 
 // Read package.json for version
 let version = '0.0.0';
-const packageJsonPath = join(__dirname, '..', 'package.json');
-const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8')) as { version: string };
-version = packageJson.version;
+try {
+  // Source path: cli/index.ts -> .. -> project root
+  const packageJson = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf-8')) as { version: string };
+  version = packageJson.version;
+} catch {
+  // Dist path: dist/cli/index.js -> ../.. -> project root
+  const packageJson = JSON.parse(readFileSync(join(__dirname, '..', '..', 'package.json'), 'utf-8')) as { version: string };
+  version = packageJson.version;
+}
 
 /**
  * Set log level based on CLI flags
