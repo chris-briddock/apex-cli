@@ -1,13 +1,14 @@
 {
   "name": "apexcss-cli",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "ApexCSS CLI - Build and customize your CSS framework",
   "type": "module",
-  "main": "cli/index.js",
-  "types": "./package.json",
+  "main": "dist/cli/index.js",
+  "types": "./types/index.d.ts",
   "files": [
     "bin/",
-    "cli/",
+    "dist/",
+    "types/",
     "README.md",
     "LICENSE"
   ],
@@ -16,24 +17,26 @@
     "registry": "https://registry.npmjs.org/"
   },
   "bin": {
-    "apexcss": "bin/apexcss-cli.js"
+    "apexcss": "dist/bin/apexcss-cli.js"
   },
   "scripts": {
-    "test": "node tests/run-tests.js",
-    "test:unit": "node --test tests/unit/**/*.test.js",
-    "test:watch": "node --test --watch tests/unit/**/*.test.js",
-    "test:coverage": "c8 node tests/run-tests.js",
-    "test:coverage:text": "c8 --reporter=text --reporter=text-summary node tests/run-tests.js",
-    "test:coverage:html": "c8 --reporter=html node tests/run-tests.js",
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "test": "tsx tests/run-tests.ts",
+    "test:unit": "tsx --test tests/unit/**/*.test.ts",
+    "test:watch": "tsx --test --watch tests/unit/**/*.test.ts",
+    "test:coverage": "c8 tsx tests/run-tests.ts",
+    "test:coverage:text": "c8 --reporter=text --reporter=text-summary tsx tests/run-tests.ts",
+    "test:coverage:html": "c8 --reporter=html tsx tests/run-tests.ts",
     "lint": "biome lint cli/ bin/ tests/",
     "lint:fix": "biome lint cli/ bin/ tests/ --write",
     "format": "biome format cli/ bin/ tests/",
     "format:fix": "biome format cli/ bin/ tests/ --write",
     "check": "biome check cli/ bin/ tests/",
     "check:fix": "biome check cli/ bin/ tests/ --write",
-    "doctor": "node bin/apexcss-cli.js doctor",
-    "version": "node bin/apexcss-cli.js --version",
-    "prepublishOnly": "echo \"Preparing for publish...\""
+    "doctor": "node dist/bin/apexcss-cli.js doctor",
+    "version": "node dist/bin/apexcss-cli.js --version",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "css",
@@ -53,16 +56,16 @@
   "license": "MIT",
   "devDependencies": {
     "@biomejs/biome": "^2.4.11",
-    "c8": "^11.0.0"
+    "@types/node": "^22.19.20",
+    "c8": "^11.0.0",
+    "tsx": "^4.22.1",
+    "typescript": "^5.8.0"
   },
   "dependencies": {
     "chalk": "^5.6.2",
-    "commander": "^14.0.3",
     "chokidar": "^3.6.0",
+    "commander": "^14.0.3",
     "inquirer": "^13.4.1"
-  },
-  "optionalDependencies": {
-
   },
   "peerDependencies": {
     "apexcss": "^0.4.1",
