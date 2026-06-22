@@ -5,7 +5,7 @@
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import * as sass from 'sass';
-// Import the config builder
+import { cacheGet, cacheSet, computeCacheKey } from '../utils/cache.ts';
 import { generateSCSS } from '../utils/config-builder.ts';
 import { loadConfig } from '../utils/config-loader.ts';
 import { logger } from '../utils/logger.ts';
@@ -22,6 +22,7 @@ interface BuildOptions {
   minify?: boolean;
   sourcemap?: boolean;
   format?: string;
+  noCache?: boolean;
 }
 
 /**
@@ -86,10 +87,46 @@ function getEntryFile(layer: string): string {
 }
 
 /**
- * Compile a single SCSS file
+ * Try to minify CSS with LightningCSS; falls back to the Sass-compiled output on failure.
  */
-function compileSassFile(entryFile: string, outputPath: string, compileOptions: sass.Options<'sync'>): ReturnType<typeof sass.compile> {
-  const result = sass.compile(entryFile, compileOptions);
+async function applyLightningCSS(css: string): Promise<string> {
+  try {
+    // Dynamic import so LightningCSS is optional — not listed in hard dependencies
+    const { transform } = (await import('lightningcss')) as typeof import('lightningcss');
+    const result = transform({
+      filename: 'output.css',
+      code: Buffer.from(css),
+      minify: true,
+      targets: { chrome: 95 << 16 } // reasonable modern target
+    });
+    return result.code.toString();
+  } catch {
+    // LightningCSS not installed — silently fall back to Sass compressed output
+    return css;
+  }
+}
+
+/**
+ * Compile a single SCSS file. If minify is true and LightningCSS is available,
+ * post-process with it for better compression. The Sass style is always 'expanded'
+ * when LightningCSS handles minification; 'compressed' otherwise.
+ */
+async function compileSassFile(
+  entryFile: string,
+  outputPath: string,
+  compileOptions: sass.Options<'sync'>,
+  useLightning: boolean
+): Promise<ReturnType<typeof sass.compile>> {
+  const sassOptions = useLightning ? { ...compileOptions, style: 'expanded' as const } : compileOptions;
+
+  const result = sass.compile(entryFile, sassOptions);
+
+  if (useLightning) {
+    const minified = await applyLightningCSS(result.css);
+    writeFileSync(outputPath, minified);
+    return { ...result, css: minified };
+  }
+
   writeFileSync(outputPath, result.css);
   return result;
 }
@@ -106,20 +143,49 @@ function logBuildSuccess(filename: string, css: string, description: string): vo
 /**
  * Write source map file if enabled
  */
-function writeSourceMap(outputDir: string, filename: string, sourceMap: ReturnType<typeof sass.compile>['sourceMap'] | undefined, enabled: boolean | undefined): void {
+function writeSourceMap(
+  outputDir: string,
+  filename: string,
+  sourceMap: ReturnType<typeof sass.compile>['sourceMap'] | undefined,
+  enabled: boolean | undefined
+): void {
   if (enabled && sourceMap) {
     writeFileSync(resolve(outputDir, `${filename}.css.map`), JSON.stringify(sourceMap));
   }
 }
 
 /**
- * Run Sass build using the entry files from node_modules
+ * Detect whether LightningCSS is available in the project.
  */
-async function runSassBuild(sourceDir: string, options: BuildOptions, outputDir: string, layers: string[]): Promise<void> {
+async function isLightningCSSAvailable(): Promise<boolean> {
+  try {
+    await import('lightningcss');
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Run Sass build using the entry files from node_modules.
+ * When --minify is set, uses LightningCSS post-processing if available.
+ */
+async function runSassBuild(
+  sourceDir: string,
+  options: BuildOptions,
+  outputDir: string,
+  layers: string[]
+): Promise<void> {
+  const useLightning = options.minify ? await isLightningCSSAvailable() : false;
+  if (useLightning) {
+    logger.verbose('LightningCSS detected — using it for minification');
+  }
+
   const compileOptions: sass.Options<'sync'> = {
     loadPaths: [sourceDir],
     sourceMap: options.sourcemap,
-    style: options.minify ? 'compressed' : 'expanded'
+    // When LightningCSS handles minification, compile expanded first
+    style: options.minify && !useLightning ? 'compressed' : 'expanded'
   };
 
   // Build individual layer files
@@ -136,7 +202,7 @@ async function runSassBuild(sourceDir: string, options: BuildOptions, outputDir:
       continue;
     }
 
-    const result = compileSassFile(entryFile, resolve(outputDir, `${layer}.css`), compileOptions);
+    const result = await compileSassFile(entryFile, resolve(outputDir, `${layer}.css`), compileOptions, useLightning);
     logBuildSuccess(`${layer}.css`, result.css, `${layer} layer`);
     writeSourceMap(outputDir, layer, result.sourceMap, options.sourcemap);
   }
@@ -145,7 +211,7 @@ async function runSassBuild(sourceDir: string, options: BuildOptions, outputDir:
   if (layers.length === 3) {
     const mainFile = resolve(sourceDir, 'main.scss');
     if (existsSync(mainFile)) {
-      const result = compileSassFile(mainFile, resolve(outputDir, 'apex.css'), compileOptions);
+      const result = await compileSassFile(mainFile, resolve(outputDir, 'apex.css'), compileOptions, useLightning);
       logBuildSuccess('apex.css', result.css, 'complete framework');
       writeSourceMap(outputDir, 'apex', result.sourceMap, options.sourcemap);
     }
@@ -191,24 +257,59 @@ export async function buildCommand(options: BuildOptions): Promise<void> {
   const layers = parseLayers(options.layers);
   logger.info(`Building layers: ${layers.join(', ')}`);
 
-  // Write custom config to source directory (node_modules/apexcss/src/config)
-  logger.info('Writing configuration...');
-  writeConfigFiles(scssContent, sourceDir);
+  // Check build cache
+  const configAbsPath = resolve(cwd, options.configPath);
+  if (!options.noCache) {
+    try {
+      const cacheKey = await computeCacheKey({
+        configPath: configAbsPath,
+        sourceDir,
+        layers,
+        minify: options.minify,
+        sourcemap: options.sourcemap
+      });
+      const hit = await cacheGet(cacheKey, outputDir, cwd);
+      if (hit) {
+        const duration = Date.now() - startTime;
+        logger.success(`Cache hit — skipping compilation (${duration}ms)`);
+        logger.info(`Output directory: ${logger.path(options.outputDir)}`);
+        return;
+      }
 
-  // Build using Sass compiler on the entry files
-  logger.info('Compiling CSS...');
-  logger.newline();
+      // Write custom config to source directory (node_modules/apexcss/src/config)
+      logger.info('Writing configuration...');
+      writeConfigFiles(scssContent, sourceDir);
 
-  try {
-    await runSassBuild(sourceDir, options, outputDir, layers);
+      // Build using Sass compiler on the entry files
+      logger.info('Compiling CSS...');
+      logger.newline();
 
-    const duration = Date.now() - startTime;
+      await runSassBuild(sourceDir, options, outputDir, layers);
+
+      // Store result in cache
+      const outputFiles = [...layers.map(l => `${l}.css`), ...(layers.length === 3 ? ['apex.css'] : [])];
+      cacheSet(cacheKey, outputFiles, outputDir, cwd);
+    } catch (error) {
+      logger.error(`Build failed: ${(error as Error).message}`);
+      throw error;
+    }
+  } else {
+    // No-cache path
+    logger.info('Writing configuration...');
+    writeConfigFiles(scssContent, sourceDir);
+    logger.info('Compiling CSS...');
     logger.newline();
-    logger.success(`Build completed in ${duration}ms`);
-    logger.newline();
-    logger.info(`Output directory: ${logger.path(options.outputDir)}`);
-  } catch (error) {
-    logger.error(`Build failed: ${(error as Error).message}`);
-    throw error;
+    try {
+      await runSassBuild(sourceDir, options, outputDir, layers);
+    } catch (error) {
+      logger.error(`Build failed: ${(error as Error).message}`);
+      throw error;
+    }
   }
+
+  const duration = Date.now() - startTime;
+  logger.newline();
+  logger.success(`Build completed in ${duration}ms`);
+  logger.newline();
+  logger.info(`Output directory: ${logger.path(options.outputDir)}`);
 }

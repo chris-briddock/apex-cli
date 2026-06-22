@@ -1,5 +1,5 @@
-import { access, mkdir, writeFile } from 'node:fs/promises';
 import { watchFile } from 'node:fs';
+import { access, mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 const LOG_PREFIX = '[apex-config-builder]';
@@ -411,7 +411,7 @@ export const defaultConfig: Required<ApexConfig> = {
     darkMode: true,
     rtl: true,
     accessibility: true,
-    zIndex: true,
+    zIndex: true
   },
 
   breakpoints: {
@@ -420,7 +420,7 @@ export const defaultConfig: Required<ApexConfig> = {
     lg: '1024px',
     xl: '1280px',
     xxl: '2560px',
-    xxxl: '3840px',
+    xxxl: '3840px'
   },
 
   spacing: {
@@ -458,7 +458,7 @@ export const defaultConfig: Required<ApexConfig> = {
     '64': '16rem',
     '72': '18rem',
     '80': '20rem',
-    '96': '24rem',
+    '96': '24rem'
   },
 
   fractionalWidths: {
@@ -467,7 +467,7 @@ export const defaultConfig: Required<ApexConfig> = {
     quarters: true,
     fifths: true,
     sixths: true,
-    twelfths: true,
+    twelfths: true
   },
 
   columns: {
@@ -483,22 +483,22 @@ export const defaultConfig: Required<ApexConfig> = {
       '4xl': '56rem',
       '5xl': '64rem',
       '6xl': '72rem',
-      '7xl': '80rem',
+      '7xl': '80rem'
     },
     ruleStyles: {
       solid: 'solid',
       dashed: 'dashed',
       dotted: 'dotted',
       double: 'double',
-      none: 'none',
+      none: 'none'
     },
     ruleWidths: {
       0: '0px',
       default: '1px',
       2: '2px',
       4: '4px',
-      8: '8px',
-    },
+      8: '8px'
+    }
   },
 
   textShadow: {
@@ -509,7 +509,7 @@ export const defaultConfig: Required<ApexConfig> = {
     lg: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
     xl: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
     '2xl': '0 25px 50px -12px rgb(0 0 0 / 0.25)',
-    inner: 'inset 0 2px 4px 0 rgb(0 0 0 / 0.05)',
+    inner: 'inset 0 2px 4px 0 rgb(0 0 0 / 0.05)'
   },
 
   ringWidths: {
@@ -518,7 +518,7 @@ export const defaultConfig: Required<ApexConfig> = {
     2: '2px',
     4: '4px',
     8: '8px',
-    default: '3px',
+    default: '3px'
   },
 
   ringColors: {
@@ -528,7 +528,7 @@ export const defaultConfig: Required<ApexConfig> = {
     white: '#fff',
     black: '#000',
     primary: 'var(--color-primary-500)',
-    gray: 'var(--color-gray-500)',
+    gray: 'var(--color-gray-500)'
   },
 
   ringOpacity: {
@@ -546,7 +546,7 @@ export const defaultConfig: Required<ApexConfig> = {
     80: '0.8',
     90: '0.9',
     95: '0.95',
-    100: '1',
+    100: '1'
   },
 
   outlineWidths: {
@@ -555,7 +555,7 @@ export const defaultConfig: Required<ApexConfig> = {
     2: '2px',
     4: '4px',
     8: '8px',
-    default: '3px',
+    default: '3px'
   },
 
   outlineOffsets: {
@@ -564,7 +564,7 @@ export const defaultConfig: Required<ApexConfig> = {
     2: '2px',
     4: '4px',
     8: '8px',
-    default: '0px',
+    default: '0px'
   },
 
   blendModes: {
@@ -583,7 +583,7 @@ export const defaultConfig: Required<ApexConfig> = {
     hue: 'hue',
     saturation: 'saturation',
     color: 'color',
-    luminosity: 'luminosity',
+    luminosity: 'luminosity'
   },
 
   colors: {
@@ -601,8 +601,8 @@ export const defaultConfig: Required<ApexConfig> = {
         700: 45,
         800: 35,
         900: 25,
-        950: 20,
-      },
+        950: 20
+      }
     },
     gray: {
       hue: 250,
@@ -618,8 +618,8 @@ export const defaultConfig: Required<ApexConfig> = {
         700: 45,
         800: 35,
         900: 25,
-        950: 18,
-      },
+        950: 18
+      }
     },
     success: {
       hue: 145,
@@ -635,8 +635,8 @@ export const defaultConfig: Required<ApexConfig> = {
         700: 45,
         800: 35,
         900: 25,
-        950: 20,
-      },
+        950: 20
+      }
     },
     warning: {
       hue: 80,
@@ -652,8 +652,8 @@ export const defaultConfig: Required<ApexConfig> = {
         700: 50,
         800: 40,
         900: 30,
-        950: 25,
-      },
+        950: 25
+      }
     },
     danger: {
       hue: 25,
@@ -669,8 +669,8 @@ export const defaultConfig: Required<ApexConfig> = {
         700: 45,
         800: 35,
         900: 25,
-        950: 20,
-      },
+        950: 20
+      }
     },
     info: {
       hue: 220,
@@ -686,8 +686,8 @@ export const defaultConfig: Required<ApexConfig> = {
         700: 45,
         800: 35,
         900: 25,
-        950: 20,
-      },
+        950: 20
+      }
     },
     extended: {
       blue: { hue: 250, chroma: 0.18 },
@@ -697,8 +697,8 @@ export const defaultConfig: Required<ApexConfig> = {
       purple: { hue: 300, chroma: 0.22 },
       orange: { hue: 55, chroma: 0.18 },
       teal: { hue: 180, chroma: 0.16 },
-      pink: { hue: 340, chroma: 0.18 },
-    },
+      pink: { hue: 340, chroma: 0.18 }
+    }
   },
 
   colorConfig: {
@@ -717,7 +717,7 @@ export const defaultConfig: Required<ApexConfig> = {
       purple: 'purple',
       orange: 'orange',
       teal: 'teal',
-      pink: 'pink',
+      pink: 'pink'
     },
     bgOpacityValues: [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100],
     gradientColors: {
@@ -732,8 +732,8 @@ export const defaultConfig: Required<ApexConfig> = {
       white: 'white',
       black: 'black',
       transparent: 'transparent',
-      current: 'current',
-    },
+      current: 'current'
+    }
   },
 
   typography: {
@@ -747,7 +747,7 @@ export const defaultConfig: Required<ApexConfig> = {
         'Roboto',
         'Helvetica Neue',
         'Arial',
-        'sans-serif',
+        'sans-serif'
       ],
       serif: ['ui-serif', 'Georgia', 'Cambria', 'Times New Roman', 'Times', 'serif'],
       mono: [
@@ -758,8 +758,8 @@ export const defaultConfig: Required<ApexConfig> = {
         'Consolas',
         'Liberation Mono',
         'Courier New',
-        'monospace',
-      ],
+        'monospace'
+      ]
     },
     fontSize: {
       xs: ['0.75rem', { lineHeight: '1rem' }],
@@ -774,7 +774,7 @@ export const defaultConfig: Required<ApexConfig> = {
       '6xl': ['3.75rem', { lineHeight: '1' }],
       '7xl': ['4.5rem', { lineHeight: '1' }],
       '8xl': ['6rem', { lineHeight: '1' }],
-      '9xl': ['8rem', { lineHeight: '1' }],
+      '9xl': ['8rem', { lineHeight: '1' }]
     },
     fontWeight: {
       thin: '100',
@@ -785,7 +785,7 @@ export const defaultConfig: Required<ApexConfig> = {
       semibold: '600',
       bold: '700',
       extrabold: '800',
-      black: '900',
+      black: '900'
     },
     letterSpacing: {
       tighter: '-0.05em',
@@ -793,7 +793,7 @@ export const defaultConfig: Required<ApexConfig> = {
       normal: '0em',
       wide: '0.025em',
       wider: '0.05em',
-      widest: '0.1em',
+      widest: '0.1em'
     },
     lineHeight: {
       none: '1',
@@ -801,8 +801,8 @@ export const defaultConfig: Required<ApexConfig> = {
       snug: '1.375',
       normal: '1.5',
       relaxed: '1.625',
-      loose: '2',
-    },
+      loose: '2'
+    }
   },
 
   borderRadius: {
@@ -814,7 +814,7 @@ export const defaultConfig: Required<ApexConfig> = {
     xl: '0.75rem',
     '2xl': '1rem',
     '3xl': '1.5rem',
-    full: '9999px',
+    full: '9999px'
   },
 
   shadows: {
@@ -825,7 +825,7 @@ export const defaultConfig: Required<ApexConfig> = {
     xl: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
     '2xl': '0 25px 50px -12px rgb(0 0 0 / 0.25)',
     inner: 'inset 0 2px 4px 0 rgb(0 0 0 / 0.05)',
-    none: 'none',
+    none: 'none'
   },
 
   transition: {
@@ -837,15 +837,15 @@ export const defaultConfig: Required<ApexConfig> = {
       300: '300ms',
       500: '500ms',
       700: '700ms',
-      1000: '1000ms',
+      1000: '1000ms'
     },
     timing: {
       linear: 'linear',
       default: 'cubic-bezier(0.4, 0, 0.2, 1)',
       in: 'cubic-bezier(0.4, 0, 1, 1)',
       out: 'cubic-bezier(0, 0, 0.2, 1)',
-      'in-out': 'cubic-bezier(0.4, 0, 0.2, 1)',
-    },
+      'in-out': 'cubic-bezier(0.4, 0, 0.2, 1)'
+    }
   },
 
   zIndex: {
@@ -855,7 +855,7 @@ export const defaultConfig: Required<ApexConfig> = {
     20: '20',
     30: '30',
     40: '40',
-    50: '50',
+    50: '50'
   },
 
   opacity: {
@@ -873,7 +873,7 @@ export const defaultConfig: Required<ApexConfig> = {
     80: '0.8',
     90: '0.9',
     95: '0.95',
-    100: '1',
+    100: '1'
   },
 
   filterBlurValues: {
@@ -884,7 +884,7 @@ export const defaultConfig: Required<ApexConfig> = {
     lg: '16px',
     xl: '24px',
     '2xl': '40px',
-    '3xl': '64px',
+    '3xl': '64px'
   },
 
   filterBrightnessValues: {
@@ -898,7 +898,7 @@ export const defaultConfig: Required<ApexConfig> = {
     110: '1.1',
     125: '1.25',
     150: '1.5',
-    200: '2',
+    200: '2'
   },
 
   filterContrastValues: {
@@ -908,12 +908,12 @@ export const defaultConfig: Required<ApexConfig> = {
     100: '1',
     125: '1.25',
     150: '1.5',
-    200: '2',
+    200: '2'
   },
 
   filterGrayscaleValues: {
     0: '0',
-    default: '100%',
+    default: '100%'
   },
 
   filterHueRotateValues: {
@@ -922,12 +922,12 @@ export const defaultConfig: Required<ApexConfig> = {
     30: '30deg',
     60: '60deg',
     90: '90deg',
-    180: '180deg',
+    180: '180deg'
   },
 
   filterInvertValues: {
     0: '0',
-    default: '100%',
+    default: '100%'
   },
 
   filterSaturateValues: {
@@ -935,12 +935,12 @@ export const defaultConfig: Required<ApexConfig> = {
     50: '0.5',
     100: '1',
     150: '1.5',
-    200: '2',
+    200: '2'
   },
 
   filterSepiaValues: {
     0: '0',
-    default: '100%',
+    default: '100%'
   },
 
   divideWidths: {
@@ -948,7 +948,7 @@ export const defaultConfig: Required<ApexConfig> = {
     1: '1px',
     2: '2px',
     4: '4px',
-    8: '8px',
+    8: '8px'
   },
 
   divideColors: {
@@ -956,7 +956,7 @@ export const defaultConfig: Required<ApexConfig> = {
     transparent: 'transparent',
     primary: 'var(--color-primary-500)',
     secondary: 'var(--color-secondary-500)',
-    gray: 'var(--color-gray-500)',
+    gray: 'var(--color-gray-500)'
   },
 
   divideStyles: {
@@ -964,7 +964,7 @@ export const defaultConfig: Required<ApexConfig> = {
     dashed: 'dashed',
     dotted: 'dotted',
     double: 'double',
-    none: 'none',
+    none: 'none'
   },
 
   dropShadowValues: {
@@ -974,7 +974,7 @@ export const defaultConfig: Required<ApexConfig> = {
     md: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
     lg: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
     xl: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
-    '2xl': '0 25px 50px -12px rgb(0 0 0 / 0.25)',
+    '2xl': '0 25px 50px -12px rgb(0 0 0 / 0.25)'
   },
 
   backdropOpacityValues: {
@@ -982,8 +982,8 @@ export const defaultConfig: Required<ApexConfig> = {
     25: '0.25',
     50: '0.5',
     75: '0.75',
-    100: '1',
-  },
+    100: '1'
+  }
 };
 
 // ============================================================================
@@ -1013,37 +1013,99 @@ function generateFeatureToggles(features: FeatureToggles): string {
     'Core Visual': ['colors', 'backgrounds', 'borders', 'shadows', 'opacity', 'overflow', 'objectFit'],
     'Core Interaction': ['cursor', 'transitions'],
     'Extended Layout': [
-      'flexExtended', 'gridExtended', 'float', 'containerQueries', 'isolation',
-      'placeItems', 'justifyItems', 'spaceBetween', 'columns', 'columnsExtended',
+      'flexExtended',
+      'gridExtended',
+      'float',
+      'containerQueries',
+      'isolation',
+      'placeItems',
+      'justifyItems',
+      'spaceBetween',
+      'columns',
+      'columnsExtended'
     ],
     'Extended Typography': [
-      'typographyExtended', 'fontExtended', 'letterSpacing', 'lineHeight', 'textAlignLast',
-      'textDecorationExtended', 'textJustify', 'textIndent', 'textShadow', 'textEmphasis',
-      'textOrientation', 'textUnderline', 'hangingPunctuation', 'hyphenate', 'initialLetter',
-      'tabSize', 'wordBreak', 'wordWrap', 'writingMode', 'unicodeBidi',
+      'typographyExtended',
+      'fontExtended',
+      'letterSpacing',
+      'lineHeight',
+      'textAlignLast',
+      'textDecorationExtended',
+      'textJustify',
+      'textIndent',
+      'textShadow',
+      'textEmphasis',
+      'textOrientation',
+      'textUnderline',
+      'hangingPunctuation',
+      'hyphenate',
+      'initialLetter',
+      'tabSize',
+      'wordBreak',
+      'wordWrap',
+      'writingMode',
+      'unicodeBidi'
     ],
     'Extended Visual': [
-      'backgroundExtended', 'colorModifiers', 'blendModes', 'masks', 'borderRadiusLogical',
-      'ring', 'outline', 'appearance', 'accentColor', 'colorScheme',
+      'backgroundExtended',
+      'colorModifiers',
+      'blendModes',
+      'masks',
+      'borderRadiusLogical',
+      'ring',
+      'outline',
+      'appearance',
+      'accentColor',
+      'colorScheme'
     ],
     'Extended Interaction': [
-      'interaction', 'userSelect', 'willChange', 'all', 'caret', 'scroll',
-      'overscrollBehavior', 'overscrollBehaviorExtended', 'overflowExtended',
+      'interaction',
+      'userSelect',
+      'willChange',
+      'all',
+      'caret',
+      'scroll',
+      'overscrollBehavior',
+      'overscrollBehaviorExtended',
+      'overflowExtended'
     ],
     Effects: [
-      'animations', 'transforms', 'transforms3d', 'filters', 'aspectRatio',
-      'imageRendering', 'transitionBehavior',
+      'animations',
+      'transforms',
+      'transforms3d',
+      'filters',
+      'aspectRatio',
+      'imageRendering',
+      'transitionBehavior'
     ],
     Content: [
-      'list', 'listStyleExtended', 'table', 'counter', 'caption', 'quotes',
-      'orphans', 'widows', 'pageBreak', 'break', 'verticalAlign',
+      'list',
+      'listStyleExtended',
+      'table',
+      'counter',
+      'caption',
+      'quotes',
+      'orphans',
+      'widows',
+      'pageBreak',
+      'break',
+      'verticalAlign'
     ],
     Advanced: [
-      'arbitrary', 'logicalProperties', 'sizingLogical', 'offset', 'shapeOutside',
-      'markerExtended', 'zoom', 'fieldSizing', 'svg', 'box', 'divide',
+      'arbitrary',
+      'logicalProperties',
+      'sizingLogical',
+      'offset',
+      'shapeOutside',
+      'markerExtended',
+      'zoom',
+      'fieldSizing',
+      'svg',
+      'box',
+      'divide'
     ],
     'State Variants': ['states', 'hover', 'focus', 'active', 'disabled'],
-    'Theme Support': ['darkMode', 'rtl', 'accessibility', 'zIndex'],
+    'Theme Support': ['darkMode', 'rtl', 'accessibility', 'zIndex']
   };
 
   return Object.entries(categories)
@@ -1092,7 +1154,7 @@ function generateBreakpoints(breakpoints: Breakpoints): string {
     ') !default;',
     '',
     '// Alias for backwards compatibility',
-    '$breakpoint-class-names: $breakpoint-prefixes !default;',
+    '$breakpoint-class-names: $breakpoint-prefixes !default;'
   ].join('\n');
 }
 
@@ -1126,7 +1188,7 @@ function generateFractionalWidths(config: FractionalWidths): string {
       String.raw`  "1\/5": 20%`,
       String.raw`  "2\/5": 40%`,
       String.raw`  "3\/5": 60%`,
-      String.raw`  "4\/5": 80%`,
+      String.raw`  "4\/5": 80%`
     );
   }
 
@@ -1136,7 +1198,7 @@ function generateFractionalWidths(config: FractionalWidths): string {
       String.raw`  "2\/6": 33.3333%`,
       String.raw`  "3\/6": 50%`,
       String.raw`  "4\/6": 66.6667%`,
-      String.raw`  "5\/6": 83.3333%`,
+      String.raw`  "5\/6": 83.3333%`
     );
   }
 
@@ -1152,7 +1214,7 @@ function generateFractionalWidths(config: FractionalWidths): string {
       String.raw`  "8\/12": 66.6667%`,
       String.raw`  "9\/12": 75%`,
       String.raw`  "10\/12": 83.3333%`,
-      String.raw`  "11\/12": 91.6667%`,
+      String.raw`  "11\/12": 91.6667%`
     );
   }
 
@@ -1178,14 +1240,14 @@ function generateColumns(columns: ColumnConfig): string {
     ') !default;',
     '$column-rule-styles: (',
     ...ruleStyleEntries.map(
-      ([key, value], index) => `  "${key}": ${value}${index < ruleStyleEntries.length - 1 ? ',' : ''}`,
+      ([key, value], index) => `  "${key}": ${value}${index < ruleStyleEntries.length - 1 ? ',' : ''}`
     ),
     ') !default;',
     '$column-rule-widths: (',
     ...ruleWidthEntries.map(
-      ([key, value], index) => `  "${key}": ${value}${index < ruleWidthEntries.length - 1 ? ',' : ''}`,
+      ([key, value], index) => `  "${key}": ${value}${index < ruleWidthEntries.length - 1 ? ',' : ''}`
     ),
-    ') !default;',
+    ') !default;'
   ].join('\n');
 }
 
@@ -1194,7 +1256,7 @@ function generateTextShadow(textShadow: TextShadowConfig): string {
   return [
     '$text-shadow-values: (',
     ...entries.map(([key, value], index) => `  "${key}": "${value}"${index < entries.length - 1 ? ',' : ''}`),
-    ') !default;',
+    ') !default;'
   ].join('\n');
 }
 
@@ -1203,7 +1265,7 @@ function generateRingWidths(ringWidths: RingWidths): string {
   return [
     '$ring-widths: (',
     ...entries.map(([key, value], index) => `  "${key}": ${value}${index < entries.length - 1 ? ',' : ''}`),
-    ') !default;',
+    ') !default;'
   ].join('\n');
 }
 
@@ -1212,7 +1274,7 @@ function generateRingColors(ringColors: RingColors): string {
   return [
     '$ring-colors: (',
     ...entries.map(([key, value], index) => `  "${key}": ${value}${index < entries.length - 1 ? ',' : ''}`),
-    ') !default;',
+    ') !default;'
   ].join('\n');
 }
 
@@ -1221,7 +1283,7 @@ function generateRingOpacity(ringOpacity: RingOpacity): string {
   return [
     '$ring-opacity-values: (',
     ...entries.map(([key, value], index) => `  "${key}": ${value}${index < entries.length - 1 ? ',' : ''}`),
-    ') !default;',
+    ') !default;'
   ].join('\n');
 }
 
@@ -1230,7 +1292,7 @@ function generateOutlineWidths(outlineWidths: OutlineWidths): string {
   return [
     '$outline-widths: (',
     ...entries.map(([key, value], index) => `  "${key}": ${value}${index < entries.length - 1 ? ',' : ''}`),
-    ') !default;',
+    ') !default;'
   ].join('\n');
 }
 
@@ -1239,7 +1301,7 @@ function generateOutlineOffsets(outlineOffsets: OutlineOffsets): string {
   return [
     '$outline-offsets: (',
     ...entries.map(([key, value], index) => `  "${key}": ${value}${index < entries.length - 1 ? ',' : ''}`),
-    ') !default;',
+    ') !default;'
   ].join('\n');
 }
 
@@ -1248,7 +1310,7 @@ function generateBlendModes(blendModes: BlendModes): string {
   return [
     '$blend-modes: (',
     ...entries.map(([key, value], index) => `  "${key}": ${value}${index < entries.length - 1 ? ',' : ''}`),
-    ') !default;',
+    ') !default;'
   ].join('\n');
 }
 
@@ -1266,7 +1328,7 @@ function generateDivideConfig(config: ApexConfig): string {
     ') !default;',
     '$divide-styles: (',
     ...styleEntries.map(([key, value], index) => `  "${key}": ${value}${index < styleEntries.length - 1 ? ',' : ''}`),
-    ') !default;',
+    ') !default;'
   ].join('\n');
 }
 
@@ -1280,7 +1342,7 @@ function generateFilterConfig(config: ApexConfig): string {
         const val = quoteValue ? `"${value}"` : value;
         return `  "${key}": ${val}${comma}`;
       }),
-      ') !default;',
+      ') !default;'
     ];
   };
 
@@ -1294,7 +1356,7 @@ function generateFilterConfig(config: ApexConfig): string {
     ...generateMap('filter-saturate-values', config.filterSaturateValues ?? {}),
     ...generateMap('filter-sepia-values', config.filterSepiaValues ?? {}),
     ...generateMap('drop-shadow-values', config.dropShadowValues ?? {}, true),
-    ...generateMap('backdrop-opacity-values', config.backdropOpacityValues ?? {}),
+    ...generateMap('backdrop-opacity-values', config.backdropOpacityValues ?? {})
   ].join('\n');
 }
 
@@ -1311,7 +1373,7 @@ function generateColors(colors: ColorsConfig): string {
     700: 45,
     800: 35,
     900: 25,
-    950: 20,
+    950: 20
   };
 
   const generateColorScale = (name: string, config: OKLCHColor): string[] => {
@@ -1359,7 +1421,7 @@ function generateColors(colors: ColorsConfig): string {
     '$color-success: $color-success-500 !default;',
     '$color-warning: $color-warning-500 !default;',
     '$color-danger: $color-danger-500 !default;',
-    '$color-info: $color-info-500 !default;',
+    '$color-info: $color-info-500 !default;'
   );
 
   return sections.join('\n');
@@ -1381,7 +1443,7 @@ function generateColorConfig(colorConfig: ColorConfigMap): string {
     '// Color families for utility generation',
     '$color-families: (',
     ...familyEntries.map(
-      ([key, value], index) => `  "${key}": "${value}"${index < familyEntries.length - 1 ? ',' : ''}`,
+      ([key, value], index) => `  "${key}": "${value}"${index < familyEntries.length - 1 ? ',' : ''}`
     ),
     ') !default;',
     '',
@@ -1391,17 +1453,35 @@ function generateColorConfig(colorConfig: ColorConfigMap): string {
     '// Gradient color stops',
     '$gradient-colors: (',
     ...gradientEntries.map(
-      ([key, value], index) => `  "${key}": "${value}"${index < gradientEntries.length - 1 ? ',' : ''}`,
+      ([key, value], index) => `  "${key}": "${value}"${index < gradientEntries.length - 1 ? ',' : ''}`
     ),
-    ') !default;',
+    ') !default;'
   ].join('\n');
 }
 
 function generateTypography(typography: TypographyConfig): string {
   const sassColorNames = new Set([
-    'black', 'white', 'red', 'green', 'blue', 'gray', 'orange',
-    'purple', 'yellow', 'pink', 'brown', 'cyan', 'magenta', 'navy',
-    'olive', 'silver', 'teal', 'maroon', 'aqua', 'fuchsia', 'lime',
+    'black',
+    'white',
+    'red',
+    'green',
+    'blue',
+    'gray',
+    'orange',
+    'purple',
+    'yellow',
+    'pink',
+    'brown',
+    'cyan',
+    'magenta',
+    'navy',
+    'olive',
+    'silver',
+    'teal',
+    'maroon',
+    'aqua',
+    'fuchsia',
+    'lime'
   ]);
 
   const familyEntries = Object.entries(typography.fontFamily);
@@ -1441,14 +1521,14 @@ function generateTypography(typography: TypographyConfig): string {
     '// Letter Spacing',
     '$letter-spacing: (',
     ...spacingEntries.map(
-      ([key, value], index) => `  "${key}": ${value}${index < spacingEntries.length - 1 ? ',' : ''}`,
+      ([key, value], index) => `  "${key}": ${value}${index < spacingEntries.length - 1 ? ',' : ''}`
     ),
     ') !default;',
     '',
     '// Line Heights',
     '$line-heights: (',
     ...heightEntries.map(([key, value], index) => `  "${key}": ${value}${index < heightEntries.length - 1 ? ',' : ''}`),
-    ') !default;',
+    ') !default;'
   ].join('\n');
 }
 
@@ -1457,7 +1537,7 @@ function generateBorderRadius(borderRadius: BorderRadiusConfig): string {
   return [
     '$border-radius-scale: (',
     ...entries.map(([key, value], index) => `  "${key}": ${value}${index < entries.length - 1 ? ',' : ''}`),
-    ') !default;',
+    ') !default;'
   ].join('\n');
 }
 
@@ -1471,7 +1551,7 @@ function generateShadows(shadows: ShadowsConfig): string {
       const formattedValue = needsQuotes ? `"${value}"` : value;
       return `  "${key}": ${formattedValue}${comma}`;
     }),
-    ') !default;',
+    ') !default;'
   ].join('\n');
 }
 
@@ -1483,14 +1563,14 @@ function generateTransitions(transition: TransitionConfig): string {
     '// Transition Durations',
     '$transition-duration: (',
     ...durationEntries.map(
-      ([key, value], index) => `  "${key}": ${value}${index < durationEntries.length - 1 ? ',' : ''}`,
+      ([key, value], index) => `  "${key}": ${value}${index < durationEntries.length - 1 ? ',' : ''}`
     ),
     ') !default;',
     '',
     '// Transition Timing Functions',
     '$transition-timing: (',
     ...timingEntries.map(([key, value], index) => `  "${key}": ${value}${index < timingEntries.length - 1 ? ',' : ''}`),
-    ') !default;',
+    ') !default;'
   ].join('\n');
 }
 
@@ -1499,7 +1579,7 @@ function generateZIndex(zIndex: ZIndexConfig): string {
   return [
     '$z-index: (',
     ...entries.map(([key, value], index) => `  "${key}": ${value}${index < entries.length - 1 ? ',' : ''}`),
-    ') !default;',
+    ') !default;'
   ].join('\n');
 }
 
@@ -1508,7 +1588,7 @@ function generateOpacity(opacity: OpacityConfig): string {
   return [
     '$opacity-scale: (',
     ...entries.map(([key, value], index) => `  ${key}: ${value}${index < entries.length - 1 ? ',' : ''}`),
-    ') !default;',
+    ') !default;'
   ].join('\n');
 }
 
@@ -1546,7 +1626,7 @@ export function generateSCSS(config: ApexConfig): string {
     generateZIndex(merged.zIndex),
     generateOpacity(merged.opacity),
     generateDivideConfig(merged),
-    generateFooter(),
+    generateFooter()
   ];
 
   return sections.join('\n\n');
@@ -1601,7 +1681,7 @@ function getType(value: unknown): string {
 export function validateUserConfig(
   userConfig: unknown,
   defaults: unknown = defaultConfig,
-  currentPath = '',
+  currentPath = ''
 ): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
@@ -1651,7 +1731,7 @@ export function validateUserConfig(
     Object.entries(userConfig.features).forEach(([featureKey, featureValue]) => {
       if (typeof featureValue !== 'boolean') {
         errors.push(
-          `Invalid feature toggle \`features.${featureKey}\`: expected boolean, received ${getType(featureValue)}.`,
+          `Invalid feature toggle \`features.${featureKey}\`: expected boolean, received ${getType(featureValue)}.`
         );
       }
     });
@@ -1669,7 +1749,7 @@ function parseArgs(): BuilderOptions {
     config: 'src/apex.config.js',
     output: 'src/config',
     watch: false,
-    init: false,
+    init: false
   };
 
   args.forEach(arg => {
@@ -1826,37 +1906,99 @@ function generateSampleConfig(): string {
     'Core Visual': ['colors', 'backgrounds', 'borders', 'shadows', 'opacity', 'overflow', 'objectFit'],
     'Core Interaction': ['cursor', 'transitions'],
     'Extended Layout': [
-      'flexExtended', 'gridExtended', 'float', 'containerQueries', 'isolation',
-      'placeItems', 'justifyItems', 'spaceBetween', 'columns', 'columnsExtended',
+      'flexExtended',
+      'gridExtended',
+      'float',
+      'containerQueries',
+      'isolation',
+      'placeItems',
+      'justifyItems',
+      'spaceBetween',
+      'columns',
+      'columnsExtended'
     ],
     'Extended Typography': [
-      'typographyExtended', 'fontExtended', 'letterSpacing', 'lineHeight', 'textAlignLast',
-      'textDecorationExtended', 'textJustify', 'textIndent', 'textShadow', 'textEmphasis',
-      'textOrientation', 'textUnderline', 'hangingPunctuation', 'hyphenate', 'initialLetter',
-      'tabSize', 'wordBreak', 'wordWrap', 'writingMode', 'unicodeBidi',
+      'typographyExtended',
+      'fontExtended',
+      'letterSpacing',
+      'lineHeight',
+      'textAlignLast',
+      'textDecorationExtended',
+      'textJustify',
+      'textIndent',
+      'textShadow',
+      'textEmphasis',
+      'textOrientation',
+      'textUnderline',
+      'hangingPunctuation',
+      'hyphenate',
+      'initialLetter',
+      'tabSize',
+      'wordBreak',
+      'wordWrap',
+      'writingMode',
+      'unicodeBidi'
     ],
     'Extended Visual': [
-      'backgroundExtended', 'colorModifiers', 'blendModes', 'masks', 'borderRadiusLogical',
-      'ring', 'outline', 'appearance', 'accentColor', 'colorScheme',
+      'backgroundExtended',
+      'colorModifiers',
+      'blendModes',
+      'masks',
+      'borderRadiusLogical',
+      'ring',
+      'outline',
+      'appearance',
+      'accentColor',
+      'colorScheme'
     ],
     'Extended Interaction': [
-      'interaction', 'userSelect', 'willChange', 'all', 'caret', 'scroll',
-      'overscrollBehavior', 'overscrollBehaviorExtended', 'overflowExtended',
+      'interaction',
+      'userSelect',
+      'willChange',
+      'all',
+      'caret',
+      'scroll',
+      'overscrollBehavior',
+      'overscrollBehaviorExtended',
+      'overflowExtended'
     ],
     Effects: [
-      'animations', 'transforms', 'transforms3d', 'filters', 'aspectRatio',
-      'imageRendering', 'transitionBehavior',
+      'animations',
+      'transforms',
+      'transforms3d',
+      'filters',
+      'aspectRatio',
+      'imageRendering',
+      'transitionBehavior'
     ],
     Content: [
-      'list', 'listStyleExtended', 'table', 'counter', 'caption', 'quotes',
-      'orphans', 'widows', 'pageBreak', 'break', 'verticalAlign',
+      'list',
+      'listStyleExtended',
+      'table',
+      'counter',
+      'caption',
+      'quotes',
+      'orphans',
+      'widows',
+      'pageBreak',
+      'break',
+      'verticalAlign'
     ],
     Advanced: [
-      'arbitrary', 'logicalProperties', 'sizingLogical', 'offset', 'shapeOutside',
-      'markerExtended', 'zoom', 'fieldSizing', 'svg', 'box', 'divide',
+      'arbitrary',
+      'logicalProperties',
+      'sizingLogical',
+      'offset',
+      'shapeOutside',
+      'markerExtended',
+      'zoom',
+      'fieldSizing',
+      'svg',
+      'box',
+      'divide'
     ],
     'State Variants': ['states', 'hover', 'focus', 'active', 'disabled'],
-    'Theme Support': ['darkMode', 'rtl', 'accessibility', 'zIndex'],
+    'Theme Support': ['darkMode', 'rtl', 'accessibility', 'zIndex']
   };
 
   const featuresSection = Object.entries(featureCategories)

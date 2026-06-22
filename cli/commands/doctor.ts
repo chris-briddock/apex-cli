@@ -154,7 +154,10 @@ function checkApexcssInstallation(cwd: string): CheckResult {
   }
 
   try {
-    const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8')) as { dependencies?: Record<string, string>; devDependencies?: Record<string, string> };
+    const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8')) as {
+      dependencies?: Record<string, string>;
+      devDependencies?: Record<string, string>;
+    };
     const deps = { ...packageJson.dependencies, ...packageJson.devDependencies };
 
     if (deps.apexcss) {
@@ -248,7 +251,10 @@ function checkVite(cwd: string): CheckResult {
   }
 
   try {
-    const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8')) as { dependencies?: Record<string, string>; devDependencies?: Record<string, string> };
+    const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8')) as {
+      dependencies?: Record<string, string>;
+      devDependencies?: Record<string, string>;
+    };
     const deps = { ...packageJson.dependencies, ...packageJson.devDependencies };
 
     if (deps.vite) {

@@ -2,10 +2,12 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Command } from 'commander';
+import { analyzeCommand } from './commands/analyze.ts';
 import { buildCommand } from './commands/build.ts';
 import { completionCommand } from './commands/completion.ts';
 import { doctorCommand } from './commands/doctor.ts';
 import { initCommand } from './commands/init.ts';
+import { migrateCommand } from './commands/migrate.ts';
 import { purgeCommand } from './commands/purge.ts';
 import { watchCommand } from './commands/watch.ts';
 import { handleError } from './utils/errors.ts';
@@ -22,7 +24,9 @@ try {
   version = packageJson.version;
 } catch {
   // Dist path: dist/cli/index.js -> ../.. -> project root
-  const packageJson = JSON.parse(readFileSync(join(__dirname, '..', '..', 'package.json'), 'utf-8')) as { version: string };
+  const packageJson = JSON.parse(readFileSync(join(__dirname, '..', '..', 'package.json'), 'utf-8')) as {
+    version: string;
+  };
   version = packageJson.version;
 }
 
@@ -88,6 +92,7 @@ export function cli(args: string[]): void {
       'build specific layers (base, utilities, themes, all). Comma-separated for multiple',
       'all'
     )
+    .option('--no-cache', 'skip build cache and force recompilation')
     .action(async options => {
       try {
         configureLogLevel(program.opts());
@@ -97,7 +102,8 @@ export function cli(args: string[]): void {
           minify: program.opts().minify,
           sourcemap: program.opts().sourcemap,
           format: options.format,
-          layers: options.layer
+          layers: options.layer,
+          noCache: !options.cache
         });
       } catch (error) {
         handleError(error as Error, program.opts().verbose);
@@ -140,20 +146,73 @@ export function cli(args: string[]): void {
     .command('purge')
     .description('Analyze project and optimize ApexCSS configuration by removing unused features')
     .option('--src <dirs>', 'comma-separated source directories to scan (default: auto-detect)')
+    .option('--exclude <dirs>', 'comma-separated directories to exclude from scanning')
     .option('--dry-run', 'show changes without applying them')
     .option('-y, --yes', 'skip confirmation and apply changes automatically')
     .option('--backup', 'create backup before modifying config')
     .option('--verbose-stats', 'show detailed class usage statistics')
+    .option('--report <path>', 'write a JSON analysis report to the given file path')
+    .option('--prune-css', 'tree-shake compiled CSS files to remove unused rules', false)
+    .option('--css-dir <dir>', 'directory containing compiled CSS to prune (default: node_modules/apexcss/dist)')
+    .option('--css-out <dir>', 'directory for pruned CSS output (default: same as --css-dir, overwrites in place)')
     .action(async options => {
       try {
         configureLogLevel(program.opts());
         await purgeCommand({
           configPath: program.opts().config,
           src: options.src,
+          exclude: options.exclude,
           dryRun: options.dryRun,
           yes: options.yes,
           backup: options.backup,
-          verbose: options.verboseStats || program.opts().verbose
+          verbose: options.verboseStats || program.opts().verbose,
+          report: options.report,
+          pruneCss: options.pruneCss,
+          cssDir: options.cssDir,
+          cssOut: options.cssOut
+        });
+      } catch (error) {
+        handleError(error as Error, program.opts().verbose);
+      }
+    });
+
+  // Analyze command
+  program
+    .command('analyze')
+    .description('Analyze generated CSS files and report stats (size, rules, gzip)')
+    .option('--output-dir <dir>', 'directory containing built CSS files', 'node_modules/apexcss/dist')
+    .option('--json', 'output stats as JSON', false)
+    .option('--report <path>', 'save JSON report to a file')
+    .action(async options => {
+      try {
+        configureLogLevel(program.opts());
+        await analyzeCommand({
+          outputDir: options.outputDir,
+          json: options.json,
+          reportPath: options.report
+        });
+      } catch (error) {
+        handleError(error as Error, program.opts().verbose);
+      }
+    });
+
+  // Migrate command
+  program
+    .command('migrate')
+    .description('Migrate apex.config.js to a newer version format')
+    .option('--from <version>', 'source config version (default: 0.1.x)')
+    .option('--to <version>', 'target config version (default: latest)')
+    .option('--dry-run', 'show changes without writing them')
+    .option('-y, --yes', 'apply migration without confirmation')
+    .action(async options => {
+      try {
+        configureLogLevel(program.opts());
+        await migrateCommand({
+          configPath: program.opts().config,
+          from: options.from,
+          to: options.to,
+          dryRun: options.dryRun,
+          yes: options.yes
         });
       } catch (error) {
         handleError(error as Error, program.opts().verbose);

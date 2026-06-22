@@ -116,7 +116,7 @@ describe('init command', () => {
       const content = readFileSync(filePath, 'utf-8');
       // Should only have one import
       const matches = content.match(/apex/g);
-      assert.strictEqual(matches!.length, 2); // 'apexcss' and 'apex.css'
+      assert.strictEqual(matches?.length, 2); // 'apexcss' and 'apex.css'
     });
 
     it('should not add import if already exists (apex.css)', () => {
@@ -127,7 +127,7 @@ describe('init command', () => {
 
       const content = readFileSync(filePath, 'utf-8');
       const matches = content.match(/import '\.\/apex\.css'/g);
-      assert.strictEqual(matches!.length, 1);
+      assert.strictEqual(matches?.length, 1);
     });
 
     it('should handle Angular files', () => {

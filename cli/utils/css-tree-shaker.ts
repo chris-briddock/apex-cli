@@ -7,16 +7,20 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { scanDirectories } from './purge-analyzer.ts';
 
-interface MediaQuery {
+interface AtRuleBlock {
   start: number;
   end: number;
+  keyword: string;
   condition: string;
   content: string;
+  raw: string;
 }
 
 interface CSSRule {
   selector: string;
   declarations: string;
+  atRule?: AtRuleBlock;
+  /** Convenience alias: condition string of the parent @media / @layer / @supports block. */
   media?: string;
 }
 
@@ -35,266 +39,307 @@ function normalizeClassName(className: string): string {
 }
 
 /**
- * Extract media queries from CSS
+ * Extract at-rule blocks (@media, @layer, @supports) from CSS.
+ * Correctly handles nested braces.
  */
-function extractMediaQueries(css: string): MediaQuery[] {
-  const mediaQueries: MediaQuery[] = [];
-  const mediaQueryPattern = /@media[^{]+\{/;
-  let remainingCss = css;
-  let offset = 0;
+function extractAtRuleBlocks(css: string): AtRuleBlock[] {
+  const blocks: AtRuleBlock[] = [];
+  // Match any at-rule that opens a block: @media ..., @layer ..., @supports ...
+  const atRuleStart = /@(media|layer|supports|keyframes|font-face)[^{]*\{/g;
+  let match: RegExpExecArray | null;
 
-  let mediaMatch = mediaQueryPattern.exec(remainingCss);
-  while (mediaMatch !== null) {
-    const mediaStart = offset + mediaMatch.index;
-    const mediaCondition = mediaMatch[0].slice(0, -1).trim();
+  while ((match = atRuleStart.exec(css)) !== null) {
+    const keyword = match[1];
+    const blockStart = match.index;
+    const conditionRaw = match[0].slice(0, -1).trim(); // e.g. "@media (min-width: 640px)"
+    const condition = conditionRaw;
 
-    // Find the matching closing brace for this media query
-    let braceCount = 1;
-    let pos = mediaMatch.index + mediaMatch[0].length;
+    // Walk forward to find the matching closing brace
+    let depth = 1;
+    let pos = match.index + match[0].length;
 
-    while (braceCount > 0 && pos < remainingCss.length) {
-      if (remainingCss[pos] === '{') braceCount++;
-      if (remainingCss[pos] === '}') braceCount--;
+    while (pos < css.length && depth > 0) {
+      if (css[pos] === '{') depth++;
+      else if (css[pos] === '}') depth--;
       pos++;
     }
 
-    const mediaEnd = offset + pos;
-    const mediaContent = remainingCss.slice(mediaMatch.index + mediaMatch[0].length, pos - 1);
+    const blockEnd = pos;
+    const innerContent = css.slice(match.index + match[0].length, pos - 1);
 
-    mediaQueries.push({
-      start: mediaStart,
-      end: mediaEnd,
-      condition: mediaCondition,
-      content: mediaContent
+    blocks.push({
+      start: blockStart,
+      end: blockEnd,
+      keyword,
+      condition,
+      content: innerContent,
+      raw: css.slice(blockStart, blockEnd)
     });
-
-    // Update offset and remaining CSS
-    offset = mediaEnd;
-    remainingCss = css.slice(offset);
-
-    // Find next media query
-    mediaMatch = mediaQueryPattern.exec(remainingCss);
   }
 
-  return mediaQueries;
+  return blocks;
 }
 
 /**
- * Parse CSS rules from a chunk of CSS
+ * Parse CSS rules from a chunk of CSS (no nested at-rules).
+ * Handles multi-selector rules and declarations that may contain braces (e.g. calc).
  */
-function parseRulesFromChunk(cssChunk: string, media?: string): CSSRule[] {
+function parseRulesFromChunk(cssChunk: string, atRule?: AtRuleBlock): CSSRule[] {
   const rules: CSSRule[] = [];
-  const rulePattern = /([^{]+)\{([^}]+)\}/;
-  let remaining = cssChunk;
+  let pos = 0;
+  const len = cssChunk.length;
 
-  let ruleMatch: RegExpExecArray | null;
-  while ((ruleMatch = rulePattern.exec(remaining)) !== null) {
-    const selector = ruleMatch[1].trim();
-    const declarations = ruleMatch[2].trim();
+  while (pos < len) {
+    // Skip whitespace
+    while (pos < len && /\s/.test(cssChunk[pos])) pos++;
+    if (pos >= len) break;
 
-    if (!selector.startsWith('@')) {
+    // Skip at-rules inside the chunk (nested @keyframes etc.)
+    if (cssChunk[pos] === '@') {
+      // find the next { and skip the block
+      const braceIdx = cssChunk.indexOf('{', pos);
+      if (braceIdx === -1) break;
+      let depth = 1;
+      let i = braceIdx + 1;
+      while (i < len && depth > 0) {
+        if (cssChunk[i] === '{') depth++;
+        else if (cssChunk[i] === '}') depth--;
+        i++;
+      }
+      pos = i;
+      continue;
+    }
+
+    // Find the opening brace
+    const braceIdx = cssChunk.indexOf('{', pos);
+    if (braceIdx === -1) break;
+
+    const selector = cssChunk.slice(pos, braceIdx).trim();
+
+    // Find the matching closing brace (track depth for calc() etc.)
+    let depth = 1;
+    let i = braceIdx + 1;
+    while (i < len && depth > 0) {
+      if (cssChunk[i] === '{') depth++;
+      else if (cssChunk[i] === '}') depth--;
+      i++;
+    }
+
+    const declarations = cssChunk.slice(braceIdx + 1, i - 1).trim();
+
+    if (selector && !selector.startsWith('@')) {
       const rule: CSSRule = { selector, declarations };
-      if (media) {
-        rule.media = media;
+      if (atRule) {
+        rule.atRule = atRule;
+        rule.media = atRule.condition;
       }
       rules.push(rule);
     }
 
-    remaining = remaining.slice(ruleMatch.index + ruleMatch[0].length);
+    pos = i;
   }
 
   return rules;
 }
 
 /**
- * Parse CSS into structured rules
+ * Parse CSS into structured rules.
+ * At-rule blocks (@media, @layer, @supports) are extracted first;
+ * their contents are parsed and tagged with the parent block.
+ * Everything outside at-rule blocks is parsed as regular rules.
  */
 export function parseCSS(css: string): CSSRule[] {
   const rules: CSSRule[] = [];
-  const mediaQueries = extractMediaQueries(css);
+  const atRuleBlocks = extractAtRuleBlocks(css);
 
-  // Parse regular rules from CSS before the first media query
+  // Sort blocks by start position
+  atRuleBlocks.sort((a, b) => a.start - b.start);
+
   let lastEnd = 0;
-  for (const mq of mediaQueries) {
-    // Parse rules from lastEnd to mq.start
-    const cssChunk = css.slice(lastEnd, mq.start);
-    rules.push(...parseRulesFromChunk(cssChunk));
 
-    // Parse rules inside this media query
-    rules.push(...parseRulesFromChunk(mq.content, mq.condition));
+  for (const block of atRuleBlocks) {
+    // Parse regular rules before this block
+    if (block.start > lastEnd) {
+      const chunk = css.slice(lastEnd, block.start);
+      rules.push(...parseRulesFromChunk(chunk));
+    }
 
-    lastEnd = mq.end;
+    // For @keyframes / @font-face, keep as-is (do not try to tree-shake inside)
+    if (block.keyword === 'keyframes' || block.keyword === 'font-face') {
+      // Represent as a single "rule" with a special selector so shouldKeepSelector always keeps it
+      rules.push({ selector: `@${block.keyword}`, declarations: block.content, atRule: block });
+    } else {
+      // Parse inner rules for @media, @layer, @supports
+      rules.push(...parseRulesFromChunk(block.content, block));
+    }
+
+    lastEnd = block.end;
   }
 
-  // Parse remaining CSS after last media query
-  const remainingCSS = css.slice(lastEnd);
-  rules.push(...parseRulesFromChunk(remainingCSS));
+  // Parse remaining CSS after last block
+  if (lastEnd < css.length) {
+    rules.push(...parseRulesFromChunk(css.slice(lastEnd)));
+  }
 
   return rules;
 }
 
 /**
- * Extract class selectors from a CSS selector
+ * Extract class selectors from a CSS selector string.
+ * Handles multi-selector rules (comma-separated) and escaped colons.
  */
 export function extractClassesFromSelector(selector: string): string[] {
-  // Match class names including those with escaped colons (sm\:flex)
-  const classPattern = /\.((?:[a-zA-Z_-][a-zA-Z0-9_-]*|\\:)+)/;
+  // Match class names including those with escaped colons (sm\:flex) and slashes (1\/2)
+  const classPattern = /\.((?:[a-zA-Z0-9_-]|\\[:/[\].])+)/g;
   const classes: string[] = [];
-  let remaining = selector;
-
   let match: RegExpExecArray | null;
-  while ((match = classPattern.exec(remaining)) !== null) {
-    // Normalize the class name (unescape colons)
-    const className = normalizeClassName(match[1]);
-    classes.push(className);
-    remaining = remaining.slice(match.index + match[0].length);
+
+  while ((match = classPattern.exec(selector)) !== null) {
+    classes.push(normalizeClassName(match[1]));
   }
 
   return classes;
 }
 
 /**
- * Check if a selector should be kept based on used classes
+ * Check if a selector should be kept based on used classes.
  */
 export function shouldKeepSelector(selector: string, usedClasses: Set<string>): boolean {
-  // Trim the selector
-  const trimmedSelector = selector.trim();
+  const trimmed = selector.trim();
 
-  // Always keep these selectors
-  const alwaysKeep = [
+  // Always keep these selector types
+  const alwaysKeepPatterns = [
     /^\*/, // Universal selector
-    /:root/, // Root variables
-    /\bhtml\b/, // HTML element
-    /\bbody\b/, // Body element
-    /^\[/, // Attribute selectors (like [hidden])
-    /^::/, // Pseudo-elements (::before, ::after)
-    /:where\(/, // :where() pseudo-class
-    /:is\(/, // :is() pseudo-class
-    /^@/, // At-rules
-    /^from\b/, // @keyframes from
-    /^to\b/, // @keyframes to
-    /^\d+%/ // @keyframes percentage
+    /:root/, // CSS variables
+    /\bhtml\b/,
+    /\bbody\b/,
+    /^\[/, // Attribute selectors
+    /^::/, // Pseudo-elements
+    /:where\(/,
+    /:is\(/,
+    /^@/, // At-rules (keyframes, font-face)
+    /^from\b/,
+    /^to\b/,
+    /^\d+%/
   ];
 
-  for (const pattern of alwaysKeep) {
-    if (pattern.test(trimmedSelector)) {
-      return true;
-    }
+  for (const pattern of alwaysKeepPatterns) {
+    if (pattern.test(trimmed)) return true;
   }
 
-  // Extract class names from selector
-  const selectorClasses = extractClassesFromSelector(selector);
+  // Multi-selector: keep if ANY sub-selector matches
+  const subSelectors = trimmed.split(',').map(s => s.trim());
+  return subSelectors.some(sub => isSubSelectorUsed(sub, usedClasses));
+}
 
-  // If no classes in selector, check if it's an element selector we should keep
-  if (selectorClasses.length === 0) {
-    // Keep basic element selectors (h1, p, etc.) but not complex ones
-    const isSimpleElement = /^[a-zA-Z][a-zA-Z0-9]*$/.test(trimmedSelector);
-    if (isSimpleElement) {
-      return true;
-    }
+function isSubSelectorUsed(selector: string, usedClasses: Set<string>): boolean {
+  const classes = extractClassesFromSelector(selector);
+
+  if (classes.length === 0) {
+    // No classes — keep simple element selectors (h1, p, a, etc.)
+    return /^[a-zA-Z][a-zA-Z0-9]*$/.test(selector.trim());
   }
 
-  // Check if any class in the selector is used
-  return selectorClasses.some(cls => {
-    // Check exact match
-    if (usedClasses.has(cls)) {
-      return true;
-    }
+  return classes.some(cls => {
+    if (usedClasses.has(cls)) return true;
 
-    // Check without responsive prefix (e.g., 'sm:flex' -> 'flex')
-    const withoutPrefix = cls.replace(/^(sm|md|lg|xl|2xl):/, '');
-    if (usedClasses.has(withoutPrefix)) {
-      return true;
-    }
+    // Strip responsive prefix: sm:flex → flex
+    const withoutResponsive = cls.replace(/^(?:sm|md|lg|xl|2xl):/, '');
+    if (usedClasses.has(withoutResponsive)) return true;
 
-    // Check for partial matches (e.g., 'text-gray-900' matches if 'text-gray' is used)
-    const baseClass = cls.split('-').slice(0, 2).join('-');
-    if (usedClasses.has(baseClass)) {
-      return true;
-    }
+    // Strip any pseudo-class suffix: hover:flex → flex
+    const withoutPseudo = cls.split(':').pop();
+    if (withoutPseudo && usedClasses.has(withoutPseudo)) return true;
 
-    // Check for hover variants - if base class is used, keep hover variant
-    const baseWithoutPseudo = cls.split(':').pop();
-    if (baseWithoutPseudo && usedClasses.has(baseWithoutPseudo)) {
-      return true;
-    }
+    // Partial prefix match: text-gray-900 kept if text-gray is in use
+    const twoPartBase = cls.split('-').slice(0, 2).join('-');
+    if (twoPartBase && usedClasses.has(twoPartBase)) return true;
 
     return false;
   });
 }
 
 /**
- * Tree-shake CSS by removing unused rules
+ * Tree-shake CSS by removing unused rules.
+ * Preserves @layer / @media / @supports wrappers even if partially pruned.
+ * Empty wrappers are dropped entirely.
  */
 export function treeShakeCSS(css: string, usedClasses: Set<string>): string {
   const rules = parseCSS(css);
-  const keptRules: CSSRule[] = [];
-  const mediaRules = new Map<string, CSSRule[]>();
+
+  // Group rules by their at-rule block (using start position as key, or null for top-level)
+  const topLevelRules: CSSRule[] = [];
+  const atRuleGroups = new Map<string, { block: AtRuleBlock; rules: CSSRule[] }>();
 
   for (const rule of rules) {
-    if (shouldKeepSelector(rule.selector, usedClasses)) {
-      if (rule.media) {
-        // Group by media query
-        if (!mediaRules.has(rule.media)) {
-          mediaRules.set(rule.media, []);
-        }
-        mediaRules.get(rule.media)!.push(rule);
-      } else {
-        keptRules.push(rule);
+    if (!rule.atRule) {
+      topLevelRules.push(rule);
+    } else {
+      const key = `${rule.atRule.start}`;
+      if (!atRuleGroups.has(key)) {
+        atRuleGroups.set(key, { block: rule.atRule, rules: [] });
       }
+      atRuleGroups.get(key)?.rules.push(rule);
     }
   }
 
-  // Build output CSS
   const output: string[] = [];
 
-  // Add regular rules
-  for (const rule of keptRules) {
-    const formattedDeclarations = rule.declarations
-      .split(';')
-      .filter(d => d.trim())
-      .map(d => `  ${d.trim()};`)
-      .join('\n');
-    output.push(`${rule.selector} {\n${formattedDeclarations}\n}`);
+  // Emit top-level rules
+  for (const rule of topLevelRules) {
+    if (shouldKeepSelector(rule.selector, usedClasses)) {
+      output.push(formatRule(rule.selector, rule.declarations, ''));
+    }
   }
 
-  // Add media query rules
-  for (const [media, mediaQueryRules] of mediaRules) {
-    const mediaContent: string[] = [];
-    for (const rule of mediaQueryRules) {
-      const formattedDeclarations = rule.declarations
-        .split(';')
-        .filter(d => d.trim())
-        .map(d => `    ${d.trim()};`)
-        .join('\n');
-      mediaContent.push(`  ${rule.selector} {\n${formattedDeclarations}\n  }`);
+  // Emit at-rule groups
+  for (const [, group] of atRuleGroups) {
+    const { block, rules: groupRules } = group;
+
+    // @keyframes / @font-face: keep as-is if any rule matches
+    if (block.keyword === 'keyframes' || block.keyword === 'font-face') {
+      output.push(block.raw);
+      continue;
     }
-    output.push(`${media} {\n${mediaContent.join('\n\n')}\n}`);
+
+    // Filter kept rules within the block
+    const kept = groupRules.filter(r => shouldKeepSelector(r.selector, usedClasses));
+    if (kept.length === 0) continue;
+
+    // Rebuild the at-rule block with only kept rules
+    const innerLines = kept.map(r => formatRule(r.selector, r.declarations, '  '));
+    output.push(`${block.condition} {\n${innerLines.join('\n\n')}\n}`);
   }
 
   return output.join('\n\n');
 }
 
-/**
- * Get used classes from source directories
- */
-export async function getUsedClasses(directories: string[]): Promise<Set<string>> {
-  const allClasses = new Set<string>();
-
-  for (const dir of directories) {
-    const result = await scanDirectories([dir]);
-    for (const cls of result.classes) {
-      allClasses.add(cls);
-    }
-  }
-
-  return allClasses;
+function formatRule(selector: string, declarations: string, indent: string): string {
+  const formattedDecls = declarations
+    .split(';')
+    .map(d => d.trim())
+    .filter(d => d.length > 0)
+    .map(d => `${indent}  ${d};`)
+    .join('\n');
+  return `${indent}${selector} {\n${formattedDecls}\n${indent}}`;
 }
 
 /**
- * Tree-shake a CSS file
+ * Get used classes from source directories.
  */
-export async function treeShakeFile(inputPath: string, outputPath: string, usedClasses: Set<string>): Promise<TreeShakeStats> {
+export async function getUsedClasses(directories: string[]): Promise<Set<string>> {
+  const result = await scanDirectories(directories);
+  return result.classes;
+}
+
+/**
+ * Tree-shake a CSS file and write the result.
+ */
+export async function treeShakeFile(
+  inputPath: string,
+  outputPath: string,
+  usedClasses: Set<string>
+): Promise<TreeShakeStats> {
   const css = await readFile(inputPath, 'utf-8');
   const originalSize = Buffer.byteLength(css, 'utf8');
 
@@ -308,19 +353,15 @@ export async function treeShakeFile(inputPath: string, outputPath: string, usedC
     originalSize,
     newSize,
     reduction,
-    reductionPercent: ((reduction / originalSize) * 100).toFixed(1)
+    reductionPercent: originalSize > 0 ? ((reduction / originalSize) * 100).toFixed(1) : '0.0'
   };
 }
 
 /**
- * Format bytes to human readable string
+ * Format bytes to human-readable string.
  */
 export function formatBytes(bytes: number): string {
-  if (bytes < 1024) {
-    return `${bytes} B`;
-  }
-  if (bytes < 1024 * 1024) {
-    return `${(bytes / 1024).toFixed(2)} KB`;
-  }
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 }

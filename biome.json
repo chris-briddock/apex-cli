@@ -6,14 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": [
-      "cli/**/*",
-      "bin/**/*",
-      "tests/**/*",
-      "!node_modules/**",
-      "!coverage/**",
-      "!dist/**"
-    ]
+    "includes": ["cli/**/*", "bin/**/*", "tests/**/*", "!node_modules", "!coverage", "!dist"]
   },
   "formatter": {
     "enabled": true,
@@ -64,14 +57,7 @@
       "bracketSameLine": false,
       "attributePosition": "auto"
     },
-    "globals": [
-      "describe",
-      "it",
-      "beforeEach",
-      "afterEach",
-      "beforeAll",
-      "afterAll"
-    ]
+    "globals": ["describe", "it", "beforeEach", "afterEach", "beforeAll", "afterAll"]
   },
   "json": {
     "formatter": {
