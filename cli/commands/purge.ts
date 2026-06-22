@@ -3,7 +3,8 @@
  */
 
 import { existsSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { readdir, writeFile } from 'node:fs/promises';
+import { extname, resolve } from 'node:path';
 import { loadConfig } from '../utils/config-loader.ts';
 import {
   configExists,
@@ -14,6 +15,7 @@ import {
   updateConfigFile,
   validateChanges
 } from '../utils/config-modifier.ts';
+import { formatBytes, treeShakeFile } from '../utils/css-tree-shaker.ts';
 import { analyzeFeatureUsage, FEATURE_MAPPINGS } from '../utils/feature-mapper.ts';
 import { detectFramework } from '../utils/framework-detector.ts';
 import { logger } from '../utils/logger.ts';
@@ -22,15 +24,43 @@ import { getClassStatistics, scanDirectories, suggestDirectories } from '../util
 interface PurgeOptions {
   configPath?: string;
   src?: string;
+  exclude?: string;
   dryRun?: boolean;
   yes?: boolean;
   backup?: boolean;
   verbose?: boolean;
+  report?: string;
+  pruneCss?: boolean;
+  cssDir?: string;
+  cssOut?: string;
 }
 
 interface SavingsInfo {
   total: number;
   featureSizes: Record<string, number>;
+}
+
+interface PurgeReport {
+  timestamp: string;
+  config: string;
+  scannedDirectories: string[];
+  scannedFiles: number;
+  uniqueClasses: number;
+  scanErrors: number;
+  analysis: {
+    totalFeatures: number;
+    usedFeatures: string[];
+    unusedFeatures: string[];
+    enabledUnused: string[];
+    alreadyDisabled: string[];
+    potentialSavingsKb: number;
+    coveragePercent: number;
+  };
+  changes: {
+    disabled: string[];
+    enabled: string[];
+    applied: boolean;
+  };
 }
 
 /**
@@ -65,9 +95,22 @@ function determineSourceDirectories(options: PurgeOptions, cwd: string): string[
 }
 
 /**
+ * Resolve exclude option to absolute paths
+ */
+function resolveExcludeDirs(exclude: string | undefined, cwd: string): string[] {
+  if (!exclude) return [];
+  return exclude
+    .split(',')
+    .map(d => resolve(cwd, d.trim()))
+    .filter(Boolean);
+}
+
+/**
  * Create progress callback for verbose mode
  */
-function createProgressCallback(isVerbose: boolean | undefined): ((total: number, current: number, file: string) => void) | undefined {
+function createProgressCallback(
+  isVerbose: boolean | undefined
+): ((total: number, current: number, file: string) => void) | undefined {
   if (!isVerbose) {
     return undefined;
   }
@@ -168,6 +211,85 @@ async function applyConfigurationChanges(
 }
 
 /**
+ * Write a JSON report of the purge analysis to disk
+ */
+async function writeReport(reportPath: string, report: PurgeReport): Promise<void> {
+  await writeFile(resolve(reportPath), JSON.stringify(report, null, 2), 'utf-8');
+}
+
+/**
+ * Tree-shake all CSS files in cssDir and write pruned output to cssOut.
+ * Reports per-file and total savings.
+ */
+async function pruneBuiltCss(
+  cssDir: string,
+  cssOut: string,
+  usedClasses: Set<string>,
+  isDryRun: boolean
+): Promise<void> {
+  logger.newline();
+  logger.header('CSS Tree Shaking');
+  logger.newline();
+
+  let entries: string[];
+  try {
+    entries = await readdir(cssDir);
+  } catch {
+    logger.warn(`CSS directory not found: ${cssDir}`);
+    logger.info('Run "npx apexcss build" first to generate CSS files');
+    return;
+  }
+
+  const cssFiles = entries.filter(f => extname(f) === '.css');
+
+  if (cssFiles.length === 0) {
+    logger.warn(`No CSS files found in ${cssDir}`);
+    return;
+  }
+
+  let totalOriginal = 0;
+  let totalNew = 0;
+
+  for (const file of cssFiles) {
+    const inputPath = resolve(cssDir, file);
+    const outputPath = resolve(cssOut, file);
+
+    if (isDryRun) {
+      // In dry-run, calculate but don't write
+      const { readFile } = await import('node:fs/promises');
+      const css = await readFile(inputPath, 'utf-8');
+      const { treeShakeCSS } = await import('../utils/css-tree-shaker.ts');
+      const pruned = treeShakeCSS(css, usedClasses);
+      const orig = Buffer.byteLength(css, 'utf8');
+      const next = Buffer.byteLength(pruned, 'utf8');
+      totalOriginal += orig;
+      totalNew += next;
+      logger.info(
+        `  ${file}: ${formatBytes(orig)} → ${formatBytes(next)} (${(((orig - next) / orig) * 100).toFixed(1)}% reduction) [dry run]`
+      );
+    } else {
+      try {
+        const stats = await treeShakeFile(inputPath, outputPath, usedClasses);
+        totalOriginal += stats.originalSize;
+        totalNew += stats.newSize;
+        logger.success(
+          `  ${file}: ${formatBytes(stats.originalSize)} → ${formatBytes(stats.newSize)} (-${stats.reductionPercent}%)`
+        );
+      } catch (error) {
+        logger.warn(`  ${file}: failed to prune — ${(error as Error).message}`);
+      }
+    }
+  }
+
+  logger.newline();
+  const totalReduction = totalOriginal - totalNew;
+  const totalPercent = totalOriginal > 0 ? ((totalReduction / totalOriginal) * 100).toFixed(1) : '0.0';
+  logger.success(
+    `Total CSS: ${formatBytes(totalOriginal)} → ${formatBytes(totalNew)} (saved ${formatBytes(totalReduction)}, ${totalPercent}%)`
+  );
+}
+
+/**
  * Run the purge command
  */
 export async function purgeCommand(options: PurgeOptions): Promise<void> {
@@ -192,6 +314,7 @@ export async function purgeCommand(options: PurgeOptions): Promise<void> {
 
   // Determine and validate source directories
   const srcDirs = determineSourceDirectories(options, cwd);
+  const excludeDirs = resolveExcludeDirs(options.exclude, cwd);
 
   if (srcDirs.length === 0) {
     logger.error('No source directories found to scan');
@@ -199,20 +322,40 @@ export async function purgeCommand(options: PurgeOptions): Promise<void> {
     process.exit(1);
   }
 
-  logger.info(`Scanning directories: ${srcDirs.join(', ')}`);
+  const srcLabel = srcDirs.join(', ');
+  logger.info(`Scanning directories: ${srcLabel}`);
+  if (excludeDirs.length > 0) {
+    logger.info(`Excluding: ${excludeDirs.join(', ')}`);
+  }
 
   // Scan files and extract class names
   let scanResult: Awaited<ReturnType<typeof scanDirectories>>;
   try {
     scanResult = await scanDirectories(
       srcDirs.map(d => resolve(cwd, d)),
-      { onProgress: createProgressCallback(options.verbose) }
+      {
+        onProgress: createProgressCallback(options.verbose),
+        excludeDirs: excludeDirs.length > 0 ? excludeDirs : undefined
+      }
     );
   } catch (error) {
     logger.error(`Scan failed: ${(error as Error).message}`);
     process.exit(1);
     // This line is unreachable but helps TypeScript understand
     throw error;
+  }
+
+  // Report scan errors
+  if (scanResult.errors.length > 0) {
+    if (options.verbose) {
+      logger.warn(`${scanResult.errors.length} file(s) could not be scanned:`);
+      for (const err of scanResult.errors) {
+        logger.info(`  ${err}`);
+      }
+    } else {
+      logger.warn(`${scanResult.errors.length} file(s) could not be scanned (use --verbose for details)`);
+    }
+    logger.newline();
   }
 
   logger.success(`Scanned ${scanResult.files} files, found ${scanResult.classes.size} unique classes`);
@@ -233,9 +376,20 @@ export async function purgeCommand(options: PurgeOptions): Promise<void> {
     process.exit(0);
   }
 
+  // Coverage summary
+  const coveragePercent =
+    analysis.totalFeatures > 0 ? Math.round((analysis.usedFeatures.length / analysis.totalFeatures) * 100) : 0;
+
   logger.success(
-    `Found ${analysis.usedFeatures.length} used features, ${analysis.unusedFeatures.length} unused features`
+    `Found ${analysis.usedFeatures.length}/${analysis.totalFeatures} features in use (${coveragePercent}% coverage)`
   );
+
+  if (analysis.alreadyDisabled.length > 0) {
+    logger.info(
+      `Already disabled: ${analysis.alreadyDisabled.length} feature(s) — ${analysis.alreadyDisabled.join(', ')}`
+    );
+  }
+
   logger.newline();
 
   // Calculate potential savings
@@ -250,7 +404,7 @@ export async function purgeCommand(options: PurgeOptions): Promise<void> {
   const proposedConfig = {
     ...currentConfig,
     features: {
-      ...(currentConfig.features as Record<string, boolean> || {}),
+      ...((currentConfig.features as Record<string, boolean>) || {}),
       ...Object.fromEntries(featuresToDisable.map(f => [f, false]))
     }
   };
@@ -273,47 +427,88 @@ export async function purgeCommand(options: PurgeOptions): Promise<void> {
     logger.newline();
   }
 
+  // Track whether changes were ultimately applied (for the report)
+  let changesApplied = false;
+
   // Handle no changes or dry run
   if (diff.totalChanges === 0) {
     logger.success('Your configuration is already optimized!');
-    return;
-  }
-
-  if (options.dryRun) {
+  } else if (options.dryRun) {
     logger.info('Dry run - no changes made');
-    return;
+  } else {
+    // Confirm changes (unless --yes flag)
+    const shouldApply = options.yes || (await promptForConfirmation(configPath));
+
+    if (!shouldApply) {
+      logger.info('Changes cancelled');
+    } else {
+      // Apply changes
+      logger.info('Applying changes...');
+      await applyConfigurationChanges(
+        configPath,
+        currentConfig as { features?: Record<string, boolean> },
+        proposedConfig as { features?: Record<string, boolean> },
+        options.backup
+      );
+
+      changesApplied = true;
+
+      // Show summary
+      logger.newline();
+      const summary = generateSummary(diff, savings.total);
+      logger.success(summary);
+
+      // Show next steps
+      logger.newline();
+      logger.info('Next steps:');
+      logger.info('  1. Run "npx apexcss build" to generate optimized CSS');
+      logger.info('  2. Test your application to ensure styles work correctly');
+      logger.info(
+        `  3. If issues occur, restore from backup: cp ${options.configPath || './apex.config.js'}.*.backup ${options.configPath || './apex.config.js'}`
+      );
+    }
   }
 
-  // Confirm changes (unless --yes flag)
-  const shouldApply = options.yes || (await promptForConfirmation(configPath));
-
-  if (!shouldApply) {
-    logger.info('Changes cancelled');
-    return;
+  // CSS tree shaking — produce minimal CSS output
+  if (options.pruneCss) {
+    const defaultCssDir = resolve(cwd, 'node_modules', 'apexcss', 'dist');
+    const cssDir = options.cssDir ? resolve(cwd, options.cssDir) : defaultCssDir;
+    const cssOut = options.cssOut ? resolve(cwd, options.cssOut) : cssDir;
+    await pruneBuiltCss(cssDir, cssOut, scanResult.classes, options.dryRun ?? false);
   }
 
-  // Apply changes
-  logger.info('Applying changes...');
-  await applyConfigurationChanges(
-    configPath,
-    currentConfig as { features?: Record<string, boolean> },
-    proposedConfig as { features?: Record<string, boolean> },
-    options.backup
-  );
+  // Write JSON report if requested
+  if (options.report) {
+    const report: PurgeReport = {
+      timestamp: new Date().toISOString(),
+      config: options.configPath || './apex.config.js',
+      scannedDirectories: srcDirs,
+      scannedFiles: scanResult.files,
+      uniqueClasses: scanResult.classes.size,
+      scanErrors: scanResult.errors.length,
+      analysis: {
+        totalFeatures: analysis.totalFeatures,
+        usedFeatures: analysis.usedFeatures,
+        unusedFeatures: analysis.unusedFeatures,
+        enabledUnused: analysis.enabledUnused,
+        alreadyDisabled: analysis.alreadyDisabled,
+        potentialSavingsKb: analysis.potentialSavings,
+        coveragePercent
+      },
+      changes: {
+        disabled: diff.disabled.map(c => c.feature),
+        enabled: diff.enabled.map(c => c.feature),
+        applied: changesApplied
+      }
+    };
 
-  // Show summary
-  logger.newline();
-  const summary = generateSummary(diff, savings.total);
-  logger.success(summary);
-
-  // Show next steps
-  logger.newline();
-  logger.info('Next steps:');
-  logger.info('  1. Run "npx apexcss build" to generate optimized CSS');
-  logger.info('  2. Test your application to ensure styles work correctly');
-  logger.info(
-    `  3. If issues occur, restore from backup: cp ${options.configPath || './apex.config.js'}.backup ${options.configPath || './apex.config.js'}`
-  );
+    try {
+      await writeReport(options.report, report);
+      logger.info(`Report saved to ${options.report}`);
+    } catch (error) {
+      logger.warn(`Failed to write report: ${(error as Error).message}`);
+    }
+  }
 
   const duration = Date.now() - startTime;
   logger.newline();

@@ -53,11 +53,12 @@ export async function configExists(configPath: string): Promise<boolean> {
 }
 
 /**
- * Create a backup of the config file
+ * Create a timestamped backup of the config file so successive runs don't overwrite each other
  */
 export async function createBackup(configPath: string): Promise<string> {
   const fullPath = resolve(configPath);
-  const backupPath = `${fullPath}.backup`;
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const backupPath = `${fullPath}.${timestamp}.backup`;
   await copyFile(fullPath, backupPath);
   return backupPath;
 }
@@ -65,7 +66,10 @@ export async function createBackup(configPath: string): Promise<string> {
 /**
  * Generate a diff between current and proposed config
  */
-export function generateDiff(currentConfig: { features?: Record<string, boolean> }, proposedConfig: { features?: Record<string, boolean> }): DiffResult {
+export function generateDiff(
+  currentConfig: { features?: Record<string, boolean> },
+  proposedConfig: { features?: Record<string, boolean> }
+): DiffResult {
   const changes: ConfigChange[] = [];
   const currentFeatures = currentConfig?.features || {};
   const proposedFeatures = proposedConfig?.features || {};
@@ -141,7 +145,11 @@ export function formatDiff(diff: DiffResult, savings: SavingsInfo): string {
  * Update config file with new feature values
  * Preserves original formatting and comments as much as possible
  */
-export async function updateConfigFile(configPath: string, currentConfig: { features?: Record<string, boolean> }, newFeatures: Record<string, boolean>): Promise<void> {
+export async function updateConfigFile(
+  configPath: string,
+  currentConfig: { features?: Record<string, boolean> },
+  newFeatures: Record<string, boolean>
+): Promise<void> {
   const content = await readConfigFile(configPath);
 
   // Create a new features section
@@ -154,7 +162,11 @@ export async function updateConfigFile(configPath: string, currentConfig: { feat
  * Update features section in config content
  * Uses regex replacement to preserve formatting
  */
-function updateFeaturesInContent(content: string, oldFeatures: Record<string, boolean>, newFeatures: Record<string, boolean>): string {
+function updateFeaturesInContent(
+  content: string,
+  oldFeatures: Record<string, boolean>,
+  newFeatures: Record<string, boolean>
+): string {
   let updatedContent = content;
 
   // Replace each feature value
@@ -187,7 +199,10 @@ function updateFeaturesInContent(content: string, oldFeatures: Record<string, bo
 /**
  * Build a complete config object with updated features
  */
-export function buildUpdatedConfig(currentConfig: { features?: Record<string, boolean> }, featuresToDisable: string[]): Record<string, unknown> {
+export function buildUpdatedConfig(
+  currentConfig: { features?: Record<string, boolean> },
+  featuresToDisable: string[]
+): Record<string, unknown> {
   const updatedConfig = structuredClone(currentConfig) as Record<string, unknown>;
 
   if (!updatedConfig.features) {

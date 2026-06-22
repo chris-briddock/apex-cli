@@ -65,7 +65,7 @@ describe('config-modifier', () => {
   });
 
   describe('createBackup', () => {
-    it('should create backup file', async () => {
+    it('should create backup file with content intact', async () => {
       const configPath = join(tempDir, 'test.config.js');
       const content = 'export default { features: {} };';
       await writeFile(configPath, content);
@@ -74,7 +74,19 @@ describe('config-modifier', () => {
 
       const backupContent = await readFile(backupPath, 'utf-8');
       assert.strictEqual(backupContent, content);
-      assert(backupPath.endsWith('.backup'));
+      assert(backupPath.endsWith('.backup'), 'backup path should end with .backup');
+    });
+
+    it('should create distinct backup paths on successive calls', async () => {
+      const configPath = join(tempDir, 'test.config.js');
+      await writeFile(configPath, 'export default { features: {} };');
+
+      const backupPath1 = await createBackup(configPath);
+      // Small delay so timestamps differ
+      await new Promise(r => setTimeout(r, 10));
+      const backupPath2 = await createBackup(configPath);
+
+      assert.notStrictEqual(backupPath1, backupPath2, 'successive backups should have distinct paths');
     });
   });
 
@@ -201,9 +213,7 @@ describe('config-modifier', () => {
 
     it('should format diff with enabled features', () => {
       const diff = {
-        changes: [
-          { feature: 'display', oldValue: false, newValue: true, action: 'enable' as const }
-        ],
+        changes: [{ feature: 'display', oldValue: false, newValue: true, action: 'enable' as const }],
         totalChanges: 1,
         disabled: [],
         enabled: [{ feature: 'display', oldValue: false, newValue: true, action: 'enable' as const }]
@@ -441,9 +451,7 @@ export default {
 
     it('should summarize enabled features', () => {
       const diff = {
-        changes: [
-          { feature: 'display', oldValue: false, newValue: true, action: 'enable' as const }
-        ],
+        changes: [{ feature: 'display', oldValue: false, newValue: true, action: 'enable' as const }],
         totalChanges: 1,
         disabled: [],
         enabled: [{ feature: 'display', oldValue: false, newValue: true, action: 'enable' as const }]

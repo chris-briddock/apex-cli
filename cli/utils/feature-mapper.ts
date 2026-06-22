@@ -676,7 +676,10 @@ interface FeatureUsageAnalysis {
 /**
  * Get detailed analysis of feature usage
  */
-export function analyzeFeatureUsage(classNames: Set<string>, currentConfig: { features?: Record<string, boolean> }): FeatureUsageAnalysis {
+export function analyzeFeatureUsage(
+  classNames: Set<string>,
+  currentConfig: { features?: Record<string, boolean> }
+): FeatureUsageAnalysis {
   const usedFeatures = findUsedFeatures(classNames);
   const allFeatures = getFeatureNames();
   const features = currentConfig?.features;

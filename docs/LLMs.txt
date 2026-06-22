@@ -1,0 +1,328 @@
+# ApexCSS CLI — LLM Reference
+
+> Machine-readable reference for the apexcss-cli package (v0.4.0).
+> Follows the llms.txt convention: https://llmstxt.org
+
+---
+
+## Project
+
+- **Name:** apexcss-cli
+- **Version:** 0.4.0
+- **Description:** CLI tool for building, optimising, and managing the ApexCSS utility-first CSS framework.
+- **Language:** TypeScript (ESM, Node.js ≥ 22)
+- **Repository:** https://github.com/chris-briddock/apex-cli
+- **npm:** https://www.npmjs.com/package/apexcss-cli
+- **License:** MIT
+
+---
+
+## Installation
+
+```bash
+npm install -g apexcss-cli
+# or without installing globally:
+npx apexcss <command>
+```
+
+Peer dependencies (must be installed in the user's project):
+- `apexcss` ^0.4.1
+- `sass` ≥ 1.99.0
+- `vite` ≥ 8.0.0 (optional, for Vite-based projects)
+
+Optional dependencies (installed separately for extra features):
+- `lightningcss` — faster/better CSS minification when `--minify` is used
+- `ws` — required for `apexcss serve` (WebSocket live reload)
+
+---
+
+## Commands
+
+### `apexcss init [options]`
+Scaffolds an `apex.config.js` in the current project. Detects framework automatically from `package.json`.
+
+Options:
+- `-f, --framework <name>` — override framework detection. Values: react, vue, angular, svelte, astro, next, nuxt, vanilla
+- `--no-import` — skip injecting a CSS import into the framework entry file
+
+Supported frameworks and their auto-import targets:
+
+| Framework | Detection | Import target |
+|-----------|-----------|---------------|
+| Next.js | `next` dep | `globals.css` |
+| React | `react` dep | `main.tsx` / `index.tsx` |
+| Vue | `vue` dep | `main.ts` / `main.js` |
+| Angular | `@angular/core` dep | `styles.css` |
+| Svelte | `svelte` dep | `main.ts` / `App.svelte` |
+| Astro | `astro` dep | `Layout.astro` |
+| Nuxt | `nuxt` dep | `nuxt.config.ts` instructions |
+| Vanilla | fallback | `main.js` / `main.ts` |
+
+---
+
+### `apexcss build [options]`
+Compiles SCSS from the ApexCSS source (in `node_modules/apexcss/src`) using the current `apex.config.js`. Results are cached by content hash.
+
+Options:
+- `-l, --layer <layers>` — comma-separated layers to build. Default: `all`. Values: base, utilities, themes, all
+- `--format <format>` — output format. Default: `css`. Values: css, scss, both
+- `--minify` — minify output. Uses LightningCSS if installed, falls back to Sass compressed
+- `--sourcemap` — emit `.css.map` files
+- `--no-cache` — skip cache and force recompilation
+
+Output files (default dir: `node_modules/apexcss/dist`):
+- `base.css` — reset + base element styles
+- `utilities.css` — utility classes (flex, spacing, colours, etc.)
+- `themes.css` — design token overrides
+- `apex.css` — complete combined output (only when all layers are built)
+
+Cache: `.apexcss-cache/index.json` — keyed by SHA-256 of config + SCSS sources + build options. Invalidated automatically when any source file changes.
+
+---
+
+### `apexcss watch`
+Watches `apex.config.js` for changes and runs a full rebuild on each save.
+
+Inherits global options: `--config`, `--output`, `--minify`, `--sourcemap`.
+
+---
+
+### `apexcss doctor`
+Checks the environment and reports:
+- Node.js version (must be ≥ 22)
+- Package manager presence (npm, pnpm, yarn)
+- ApexCSS installation in node_modules
+- `apex.config.js` presence
+- Detected framework
+- Detected build tool
+
+---
+
+### `apexcss purge [options]`
+Two-phase optimisation:
+1. Scans source files → extracts all CSS class names used
+2. Disables ApexCSS feature modules not referenced by any class
+3. Optionally tree-shakes the compiled CSS at the rule level (`--prune-css`)
+
+Options:
+- `--src <dirs>` — comma-separated directories to scan. Default: auto-detected from framework
+- `--exclude <dirs>` — comma-separated directories to skip
+- `--dry-run` — show proposed changes without writing anything
+- `-y, --yes` — apply without prompting for confirmation
+- `--backup` — write `apex.config.js.<timestamp>.backup` before modifying
+- `--verbose-stats` — print per-class statistics (modifier counts, responsive variants, etc.)
+- `--report <path>` — write full JSON analysis to a file
+- `--prune-css` — after scanning, tree-shake compiled CSS files to remove unused rules
+- `--css-dir <dir>` — directory containing compiled CSS to prune. Default: `node_modules/apexcss/dist`
+- `--css-out <dir>` — output directory for pruned CSS. Default: same as `--css-dir` (overwrites in place)
+
+Scanned file extensions: `.html`, `.htm`, `.jsx`, `.tsx`, `.ts`, `.vue`, `.svelte`, `.astro`, `.js`, `.mjs`, `.cjs`, `.mts`, `.cts`
+
+Ignored directories: `node_modules`, `.git`, `dist`, `build`, `out`, `.next`, `.nuxt`, `coverage`, `public`, `static`, `assets`
+
+Class extraction handles: HTML `class=`, JSX `className=`, Vue `:class=` (object + array syntax), Svelte `class:`, Alpine.js, template literals, `clsx`/`cn`/`classnames`/`cva`/`twMerge` utility calls.
+
+---
+
+### `apexcss analyze [options]`
+Reads compiled CSS files and reports stats.
+
+Options:
+- `--output-dir <dir>` — directory to read CSS from. Default: `node_modules/apexcss/dist`
+- `--json` — output results as JSON instead of a table
+- `--report <path>` — save JSON report to a file
+
+Output columns: file, size, gzip size, rules, selectors, declarations, media queries.
+Also reports top 10 CSS property names by frequency.
+
+JSON schema:
+```json
+{
+  "timestamp": "ISO8601",
+  "outputDir": "string",
+  "totalSize": "number (bytes)",
+  "totalGzipSize": "number (bytes)",
+  "totalRules": "number",
+  "files": [
+    {
+      "file": "string",
+      "size": "number",
+      "gzipSize": "number",
+      "rules": "number",
+      "selectors": "number",
+      "declarations": "number",
+      "mediaQueries": "number",
+      "layers": "number"
+    }
+  ],
+  "topProperties": [{ "property": "string", "count": "number" }]
+}
+```
+
+---
+
+### `apexcss migrate [options]`
+Applies versioned transformation rules to `apex.config.js` to upgrade it between ApexCSS config format versions.
+
+Options:
+- `--from <version>` — source version. Default: `0.1.x`
+- `--to <version>` — target version. Default: `0.3.0`
+- `--dry-run` — show diff without writing
+- `-y, --yes` — apply without confirmation
+
+Shows a line-level diff before applying. Creates a backup automatically.
+
+Built-in migrations:
+- `0.1.x → 0.2.0`: renames `colors` → `palette`, wraps loose feature flags under `features` key
+- `0.2.x → 0.3.0`: moves `palette` inside `features.palette`, renames `breakpoints` → `screens`
+
+---
+
+### `apexcss completion <shell>`
+Prints a shell completion script to stdout.
+
+Values: `bash`, `zsh`, `fish`
+
+Install example:
+```bash
+apexcss completion bash > /usr/share/bash-completion/completions/apexcss
+apexcss completion zsh  > /usr/local/share/zsh/site-functions/_apexcss
+```
+
+---
+
+## Global Options
+
+Available on all commands:
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `-v, --version` | Print version and exit | — |
+| `-c, --config <path>` | Path to config file | `./apex.config.js` |
+| `-o, --output <dir>` | CSS output directory | `node_modules/apexcss/dist` |
+| `--minify` | Minify CSS output | `false` |
+| `--sourcemap` | Emit source maps | `false` |
+| `-V, --verbose` | Verbose log output | `false` |
+| `-q, --quiet` | Suppress all non-error output | `false` |
+| `-h, --help` | Show help | — |
+
+---
+
+## Configuration File (`apex.config.js`)
+
+```js
+export default {
+  features: {
+    // Layout
+    display: true,
+    flexbox: true,
+    grid: true,
+    positioning: true,
+    visibility: true,
+    overflow: true,
+    zIndex: true,
+    // Spacing
+    spacing: true,
+    sizing: true,
+    // Typography
+    typography: true,
+    typographyExtended: false,
+    fontFamily: true,
+    // Visual
+    colors: true,
+    backgrounds: true,
+    borders: true,
+    shadows: true,
+    opacity: true,
+    // Motion
+    transitions: true,
+    animations: true,
+    transforms: true,
+    transforms3d: false,
+    // Misc
+    filters: false,
+    cursor: true,
+    userSelect: true,
+    pointerEvents: true,
+    accessibility: true,
+    tables: false,
+    forms: false,
+    print: false,
+  },
+
+  breakpoints: {
+    sm: '320px',
+    md: '768px',
+    lg: '1024px',
+    xl: '1280px',
+  },
+
+  colors: {
+    primary: {
+      hue: 250,
+      chroma: 0.2,
+      lightnessScale: {
+        50: 96, 100: 90, 200: 85, 300: 78, 400: 70,
+        500: 65, 600: 55, 700: 45, 800: 35, 900: 25, 950: 18
+      }
+    }
+  },
+
+  spacing: {
+    '0': '0px', '1': '0.25rem', '2': '0.5rem',
+    '4': '1rem', '8': '2rem', '16': '4rem'
+  }
+};
+```
+
+---
+
+## Log Levels
+
+The logger (`cli/utils/logger.ts`) supports these levels in ascending verbosity:
+
+| Level | When active | Triggered by |
+|-------|-------------|--------------|
+| `silent` | Never | — |
+| `error` | Always unless silent | — |
+| `warn` | Default and above | — |
+| `info` | Default | — |
+| `verbose` | `--verbose` flag | `-V` |
+| `debug` | `DEBUG` env var or debug level | `DEBUG=1` |
+
+`--quiet` sets level to `error`. `--verbose` sets level to `verbose`.
+
+---
+
+## Exit Codes
+
+- `0` — success
+- `1` — any error (missing config, build failure, unknown command, etc.)
+
+---
+
+## Cache Location
+
+`.apexcss-cache/index.json` in the project root. Add to `.gitignore`. Safe to delete — the next build recreates it.
+
+---
+
+## Feature → CSS Class Prefix Mapping (subset)
+
+| Feature key | Example class prefixes |
+|-------------|----------------------|
+| `display` | `block`, `inline`, `flex`, `grid`, `hidden` |
+| `flexbox` | `flex-`, `justify-`, `items-`, `self-`, `grow`, `shrink` |
+| `grid` | `grid-cols-`, `col-`, `row-`, `gap-` |
+| `spacing` | `p-`, `m-`, `px-`, `py-`, `mx-`, `my-`, `pt-`, `pb-` |
+| `typography` | `text-`, `font-`, `leading-`, `tracking-`, `uppercase`, `lowercase` |
+| `colors` | `text-{color}-{shade}`, `bg-{color}-{shade}`, `border-{color}-{shade}` |
+| `borders` | `border`, `border-`, `rounded-` |
+| `shadows` | `shadow-` |
+| `transitions` | `transition`, `duration-`, `ease-`, `delay-` |
+| `transforms` | `scale-`, `rotate-`, `translate-` |
+| `animations` | `animate-` |
+| `opacity` | `opacity-` |
+| `positioning` | `static`, `relative`, `absolute`, `fixed`, `sticky`, `top-`, `inset-` |
+
+Full mappings: `cli/utils/feature-mapper.ts`

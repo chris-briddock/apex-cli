@@ -102,18 +102,61 @@ describe('purge-analyzer', () => {
       assert(classes.has('flex'));
       assert(classes.has('items-center'));
     });
+
+    it('should extract classes from clsx calls', () => {
+      const content = "const cls = clsx('flex', 'items-center', 'p-4');";
+      const classes = extractClassNames(content);
+      assert(classes.has('flex'), 'should detect flex from clsx');
+      assert(classes.has('items-center'), 'should detect items-center from clsx');
+      assert(classes.has('p-4'), 'should detect p-4 from clsx');
+    });
+
+    it('should extract classes from cn calls', () => {
+      const content = "const cls = cn('text-sm font-bold', isActive && 'bg-blue-500');";
+      const classes = extractClassNames(content);
+      assert(classes.has('text-sm'), 'should detect text-sm from cn');
+      assert(classes.has('font-bold'), 'should detect font-bold from cn');
+      assert(classes.has('bg-blue-500'), 'should detect bg-blue-500 from cn');
+    });
+
+    it('should extract classes from classnames calls', () => {
+      const content = "const cls = classnames('rounded', 'border', 'shadow-md');";
+      const classes = extractClassNames(content);
+      assert(classes.has('rounded'));
+      assert(classes.has('border'));
+      assert(classes.has('shadow-md'));
+    });
+
+    it('should extract classes from twMerge calls', () => {
+      const content = "const cls = twMerge('px-4 py-2', 'hover:bg-gray-100');";
+      const classes = extractClassNames(content);
+      assert(classes.has('px-4'));
+      assert(classes.has('py-2'));
+      assert(classes.has('hover:bg-gray-100'));
+    });
+
+    it('should extract classes from nested utility calls', () => {
+      const content = "const cls = clsx('flex', cn('p-4', 'text-sm'));";
+      const classes = extractClassNames(content);
+      assert(classes.has('flex'));
+      assert(classes.has('p-4'));
+      assert(classes.has('text-sm'));
+    });
   });
 
   describe('shouldScanFile', () => {
     it('should return true for supported extensions', () => {
       assert.strictEqual(shouldScanFile('component.jsx'), true);
       assert.strictEqual(shouldScanFile('component.tsx'), true);
+      assert.strictEqual(shouldScanFile('component.ts'), true);
       assert.strictEqual(shouldScanFile('index.html'), true);
       assert.strictEqual(shouldScanFile('component.vue'), true);
       assert.strictEqual(shouldScanFile('page.svelte'), true);
       assert.strictEqual(shouldScanFile('layout.astro'), true);
       assert.strictEqual(shouldScanFile('script.js'), true);
-      assert.strictEqual(shouldScanFile('script.js'), true);
+      assert.strictEqual(shouldScanFile('module.mjs'), true);
+      assert.strictEqual(shouldScanFile('module.mts'), true);
+      assert.strictEqual(shouldScanFile('module.cts'), true);
     });
 
     it('should return false for unsupported extensions', () => {
@@ -155,9 +198,18 @@ describe('purge-analyzer', () => {
       assert(SCAN_EXTENSIONS.has('.html'));
       assert(SCAN_EXTENSIONS.has('.jsx'));
       assert(SCAN_EXTENSIONS.has('.tsx'));
+      assert(SCAN_EXTENSIONS.has('.ts'));
       assert(SCAN_EXTENSIONS.has('.vue'));
       assert(SCAN_EXTENSIONS.has('.svelte'));
       assert(SCAN_EXTENSIONS.has('.astro'));
+      assert(SCAN_EXTENSIONS.has('.mts'));
+      assert(SCAN_EXTENSIONS.has('.cts'));
+    });
+
+    it('should not contain duplicates', () => {
+      const asArray = Array.from(SCAN_EXTENSIONS);
+      const unique = new Set(asArray);
+      assert.strictEqual(asArray.length, unique.size, 'SCAN_EXTENSIONS must not contain duplicate entries');
     });
   });
 

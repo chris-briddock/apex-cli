@@ -6,7 +6,13 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { generateSampleConfig } from '../utils/config-loader.ts';
-import { detectFramework, getAvailableFrameworks, getRecommendedOutputDir, type FrameworkInfo, FRAMEWORKS } from '../utils/framework-detector.ts';
+import {
+  detectFramework,
+  FRAMEWORKS,
+  type FrameworkInfo,
+  getAvailableFrameworks,
+  getRecommendedOutputDir
+} from '../utils/framework-detector.ts';
 import { logger } from '../utils/logger.ts';
 
 interface InitOptions {
@@ -78,7 +84,11 @@ async function promptForOptions(framework: FrameworkInfo, options: InitOptions):
 /**
  * Get user options (interactive)
  */
-async function getUserOptions(framework: FrameworkInfo, options: InitOptions, cwd = process.cwd()): Promise<PromptResult> {
+async function getUserOptions(
+  framework: FrameworkInfo,
+  options: InitOptions,
+  cwd = process.cwd()
+): Promise<PromptResult> {
   // Always use interactive mode to ask about defaults first
   let result: PromptResult = {
     selectedFramework: framework,

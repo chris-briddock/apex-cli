@@ -14,13 +14,15 @@ export const SCAN_EXTENSIONS = new Set([
   '.htm',
   '.jsx',
   '.tsx',
+  '.ts',
   '.vue',
   '.svelte',
   '.astro',
   '.js',
-  '.js',
   '.mjs',
-  '.cjs'
+  '.cjs',
+  '.mts',
+  '.cts'
 ]);
 
 /**
@@ -46,6 +48,11 @@ export const IGNORED_DIRECTORIES = new Set([
   'static',
   'assets'
 ]);
+
+/**
+ * Max concurrent file reads during parallel scanning
+ */
+const SCAN_CONCURRENCY = 20;
 
 /**
  * Regex patterns for extracting class names
@@ -160,6 +167,37 @@ function extractFromTemplateLiterals(content: string, classNames: Set<string>): 
 }
 
 /**
+ * Extract class names from utility function calls (clsx, cn, classnames, cva, etc.)
+ * Handles nested parentheses correctly.
+ */
+function extractFromUtilityCalls(content: string, classNames: Set<string>): void {
+  const utilityStart = /(?:clsx|classnames?|cn|cx|cva|tv|twMerge|twJoin)\s*\(/g;
+  let startMatch: RegExpExecArray | null;
+
+  while ((startMatch = utilityStart.exec(content)) !== null) {
+    // Walk forward to find the matching closing paren
+    let depth = 1;
+    let i = startMatch.index + startMatch[0].length;
+
+    while (i < content.length && depth > 0) {
+      const ch = content[i];
+      if (ch === '(') depth++;
+      else if (ch === ')') depth--;
+      i++;
+    }
+
+    const argsContent = content.slice(startMatch.index + startMatch[0].length, i - 1);
+
+    // Extract string literals from arguments
+    const stringPattern = /["']([^"']+)["']/g;
+    let strMatch: RegExpExecArray | null;
+    while ((strMatch = stringPattern.exec(argsContent)) !== null) {
+      addClasses(strMatch[1], classNames);
+    }
+  }
+}
+
+/**
  * Extract class names from a single content string using all patterns
  */
 export function extractClassNames(content: string): Set<string> {
@@ -177,6 +215,9 @@ export function extractClassNames(content: string): Set<string> {
 
   // Additional pass: look for class names in template strings
   extractFromTemplateLiterals(content, classNames);
+
+  // Additional pass: extract from utility function calls (clsx, cn, etc.)
+  extractFromUtilityCalls(content, classNames);
 
   return classNames;
 }
@@ -196,10 +237,18 @@ export function shouldIgnoreDirectory(dirName: string): boolean {
   return IGNORED_DIRECTORIES.has(dirName);
 }
 
+interface GetFilesOptions {
+  excludeDirs?: string[];
+}
+
 /**
  * Recursively get all scan-able files in a directory
  */
-export async function getFilesToScan(dirPath: string, files: string[] = []): Promise<string[]> {
+export async function getFilesToScan(
+  dirPath: string,
+  files: string[] = [],
+  options?: GetFilesOptions
+): Promise<string[]> {
   const resolvedPath = resolve(dirPath);
 
   try {
@@ -209,8 +258,9 @@ export async function getFilesToScan(dirPath: string, files: string[] = []): Pro
       const fullPath = resolve(resolvedPath, entry.name);
 
       if (entry.isDirectory()) {
-        if (!shouldIgnoreDirectory(entry.name)) {
-          await getFilesToScan(fullPath, files);
+        const isExcluded = options?.excludeDirs?.some(excl => fullPath === excl || fullPath.startsWith(`${excl}/`));
+        if (!shouldIgnoreDirectory(entry.name) && !isExcluded) {
+          await getFilesToScan(fullPath, files, options);
         }
       } else if (entry.isFile() && shouldScanFile(fullPath)) {
         files.push(fullPath);
@@ -252,6 +302,7 @@ export async function scanFile(filePath: string): Promise<ScanResult> {
 
 interface ScanOptions {
   onProgress?: (total: number, current: number, filePath: string) => void;
+  excludeDirs?: string[];
 }
 
 interface ScanDirectoriesResult {
@@ -263,10 +314,10 @@ interface ScanDirectoriesResult {
 /**
  * Collect all files to scan from multiple directories
  */
-async function collectFilesToScan(directories: string[]): Promise<string[]> {
+async function collectFilesToScan(directories: string[], options?: GetFilesOptions): Promise<string[]> {
   const filesToScan: string[] = [];
   for (const dir of directories) {
-    const files = await getFilesToScan(dir);
+    const files = await getFilesToScan(dir, [], options);
     filesToScan.push(...files);
   }
   return filesToScan;
@@ -287,25 +338,39 @@ function processScanResult(result: ScanResult, allClasses: Set<string>, errors: 
 }
 
 /**
- * Scan multiple directories and extract all class names
+ * Scan multiple directories and extract all class names.
+ * Files are processed in parallel batches for performance.
  */
-export async function scanDirectories(directories: string[], options: ScanOptions = {}): Promise<ScanDirectoriesResult> {
+export async function scanDirectories(
+  directories: string[],
+  options: ScanOptions = {}
+): Promise<ScanDirectoriesResult> {
   const allClasses = new Set<string>();
   const errors: string[] = [];
 
   // Collect all files to scan
-  const filesToScan = await collectFilesToScan(directories);
+  const filesToScan = await collectFilesToScan(directories, { excludeDirs: options.excludeDirs });
 
-  // Scan each file
+  // Scan files in parallel batches to avoid exhausting file descriptor limits
   let scannedCount = 0;
-  for (const filePath of filesToScan) {
-    if (options.onProgress) {
-      options.onProgress(filesToScan.length, scannedCount, filePath);
-    }
 
-    const result = await scanFile(filePath);
-    scannedCount++;
-    processScanResult(result, allClasses, errors, filePath);
+  for (let i = 0; i < filesToScan.length; i += SCAN_CONCURRENCY) {
+    const batch = filesToScan.slice(i, i + SCAN_CONCURRENCY);
+
+    const results = await Promise.all(
+      batch.map(async filePath => {
+        const result = await scanFile(filePath);
+        scannedCount++;
+        if (options.onProgress) {
+          options.onProgress(filesToScan.length, scannedCount, filePath);
+        }
+        return { result, filePath };
+      })
+    );
+
+    for (const { result, filePath } of results) {
+      processScanResult(result, allClasses, errors, filePath);
+    }
   }
 
   return {

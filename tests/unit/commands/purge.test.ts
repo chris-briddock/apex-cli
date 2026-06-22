@@ -260,6 +260,67 @@ describe('purge command', () => {
     });
   });
 
+  describe('exclude option', () => {
+    it('should accept --exclude directories', async () => {
+      await writeFile(join(tempDir, 'apex.config.js'), 'export default { features: { display: true } };');
+
+      await mkdir(join(tempDir, 'src'), { recursive: true });
+      await mkdir(join(tempDir, 'vendor'), { recursive: true });
+      await writeFile(join(tempDir, 'src', 'index.html'), '<div class="flex"></div>');
+      await writeFile(join(tempDir, 'vendor', 'lib.html'), '<div class="grid"></div>');
+
+      try {
+        await purgeCommand({
+          configPath: './apex.config.js',
+          src: './src,./vendor',
+          exclude: './vendor',
+          dryRun: true
+        });
+      } catch {
+        // process.exit mock may trigger
+      }
+    });
+  });
+
+  describe('report option', () => {
+    it('should write a JSON report when --report is specified', async () => {
+      await writeFile(
+        join(tempDir, 'apex.config.js'),
+        'export default { features: { display: true, transforms3d: true } };'
+      );
+
+      await mkdir(join(tempDir, 'src'), { recursive: true });
+      await writeFile(join(tempDir, 'src', 'index.html'), '<div class="flex"></div>');
+
+      const reportPath = join(tempDir, 'report.json');
+
+      try {
+        await purgeCommand({
+          configPath: './apex.config.js',
+          src: './src',
+          dryRun: true,
+          report: reportPath
+        });
+      } catch {
+        // process.exit mock may trigger
+      }
+
+      const { readFile } = await import('node:fs/promises');
+      const reportContent = await readFile(reportPath, 'utf-8');
+      const report = JSON.parse(reportContent) as {
+        timestamp: string;
+        scannedFiles: number;
+        analysis: { totalFeatures: number; usedFeatures: string[] };
+        changes: { applied: boolean };
+      };
+
+      assert(report.timestamp, 'report should have a timestamp');
+      assert(typeof report.scannedFiles === 'number', 'report should include scannedFiles');
+      assert(Array.isArray(report.analysis.usedFeatures), 'report should include usedFeatures');
+      assert.strictEqual(report.changes.applied, false, 'dry-run should mark applied as false');
+    });
+  });
+
   describe('framework detection', () => {
     it('should auto-detect framework from package.json', async () => {
       await writeFile(join(tempDir, 'package.json'), JSON.stringify({ dependencies: { react: '^18.0.0' } }));

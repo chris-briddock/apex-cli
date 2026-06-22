@@ -4,8 +4,8 @@
 
 import assert from 'node:assert';
 import { beforeEach, describe, it } from 'node:test';
-import { logger } from '../../../cli/utils/logger.ts';
 import { performWatchBuild, WatchBuildState } from '../../../cli/commands/watch.ts';
+import { logger } from '../../../cli/utils/logger.ts';
 
 describe('watch command', () => {
   describe('WatchBuildState', () => {
