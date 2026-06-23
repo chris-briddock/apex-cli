@@ -1,6 +1,6 @@
 {
   "name": "apexcss-cli",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "ApexCSS CLI - Build and customize your CSS framework",
   "type": "module",
   "main": "dist/cli/index.js",
