@@ -1,6 +1,6 @@
 # ApexCSS CLI — LLM Reference
 
-> Machine-readable reference for the apexcss-cli package (v0.4.0).
+> Machine-readable reference for the apexcss-cli package (v0.4.3).
 > Follows the llms.txt convention: https://llmstxt.org
 
 ---
@@ -8,7 +8,7 @@
 ## Project
 
 - **Name:** apexcss-cli
-- **Version:** 0.4.0
+- **Version:** 0.4.3
 - **Description:** CLI tool for building, optimising, and managing the ApexCSS utility-first CSS framework.
 - **Language:** TypeScript (ESM, Node.js ≥ 22)
 - **Repository:** https://github.com/chris-briddock/apex-cli
@@ -26,8 +26,8 @@ npx apexcss <command>
 ```
 
 Peer dependencies (must be installed in the user's project):
-- `apexcss` ^0.4.1
-- `sass` ≥ 1.99.0
+- `apexcss` ^0.4.3
+- `sass` ≥ 1.100.0
 - `vite` ≥ 8.0.0 (optional, for Vite-based projects)
 
 Optional dependencies (installed separately for extra features):
