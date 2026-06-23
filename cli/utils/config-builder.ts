@@ -1172,49 +1172,49 @@ function generateFractionalWidths(config: FractionalWidths): string {
   const widths: string[] = [];
 
   if (config.halves) {
-    widths.push(String.raw`  "1\/2": 50%`);
+    widths.push(String.raw`  "1\\/2": 50%`);
   }
 
   if (config.thirds) {
-    widths.push(String.raw`  "1\/3": 33.3333%`, String.raw`  "2\/3": 66.6667%`);
+    widths.push(String.raw`  "1\\/3": 33.3333%`, String.raw`  "2\\/3": 66.6667%`);
   }
 
   if (config.quarters) {
-    widths.push(String.raw`  "1\/4": 25%`, String.raw`  "2\/4": 50%`, String.raw`  "3\/4": 75%`);
+    widths.push(String.raw`  "1\\/4": 25%`, String.raw`  "2\\/4": 50%`, String.raw`  "3\\/4": 75%`);
   }
 
   if (config.fifths) {
     widths.push(
-      String.raw`  "1\/5": 20%`,
-      String.raw`  "2\/5": 40%`,
-      String.raw`  "3\/5": 60%`,
-      String.raw`  "4\/5": 80%`
+      String.raw`  "1\\/5": 20%`,
+      String.raw`  "2\\/5": 40%`,
+      String.raw`  "3\\/5": 60%`,
+      String.raw`  "4\\/5": 80%`
     );
   }
 
   if (config.sixths) {
     widths.push(
-      String.raw`  "1\/6": 16.6667%`,
-      String.raw`  "2\/6": 33.3333%`,
-      String.raw`  "3\/6": 50%`,
-      String.raw`  "4\/6": 66.6667%`,
-      String.raw`  "5\/6": 83.3333%`
+      String.raw`  "1\\/6": 16.6667%`,
+      String.raw`  "2\\/6": 33.3333%`,
+      String.raw`  "3\\/6": 50%`,
+      String.raw`  "4\\/6": 66.6667%`,
+      String.raw`  "5\\/6": 83.3333%`
     );
   }
 
   if (config.twelfths) {
     widths.push(
-      String.raw`  "1\/12": 8.3333%`,
-      String.raw`  "2\/12": 16.6667%`,
-      String.raw`  "3\/12": 25%`,
-      String.raw`  "4\/12": 33.3333%`,
-      String.raw`  "5\/12": 41.6667%`,
-      String.raw`  "6\/12": 50%`,
-      String.raw`  "7\/12": 58.3333%`,
-      String.raw`  "8\/12": 66.6667%`,
-      String.raw`  "9\/12": 75%`,
-      String.raw`  "10\/12": 83.3333%`,
-      String.raw`  "11\/12": 91.6667%`
+      String.raw`  "1\\/12": 8.3333%`,
+      String.raw`  "2\\/12": 16.6667%`,
+      String.raw`  "3\\/12": 25%`,
+      String.raw`  "4\\/12": 33.3333%`,
+      String.raw`  "5\\/12": 41.6667%`,
+      String.raw`  "6\\/12": 50%`,
+      String.raw`  "7\\/12": 58.3333%`,
+      String.raw`  "8\\/12": 66.6667%`,
+      String.raw`  "9\\/12": 75%`,
+      String.raw`  "10\\/12": 83.3333%`,
+      String.raw`  "11\\/12": 91.6667%`
     );
   }
 
