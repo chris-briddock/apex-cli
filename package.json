@@ -1,6 +1,6 @@
 {
   "name": "apexcss-cli",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "ApexCSS CLI - Build and customize your CSS framework",
   "type": "module",
   "main": "dist/cli/index.js",
@@ -17,7 +17,7 @@
     "registry": "https://registry.npmjs.org/"
   },
   "bin": {
-    "apexcss": "dist/bin/apexcss-cli.js"
+    "apex": "dist/bin/apexcss-cli.js"
   },
   "scripts": {
     "build": "tsc",

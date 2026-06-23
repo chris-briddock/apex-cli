@@ -16,6 +16,11 @@ ApexCSS CLI helps you build and customize your own CSS utility framework. It pro
 
 ```bash
 npm install -g apexcss-cli
+```
+
+This installs the `apex` command globally.
+
+```bash
 # or use without installing
 (recommended) npx apexcss-cli <command>
 ```
@@ -24,13 +29,13 @@ npm install -g apexcss-cli
 
 ```bash
 # 1. Initialize with automatic framework detection
-apexcss-cli init
+apex init
 
 # 2. Build your CSS
-apexcss-cli build
+apex build
 
 # 3. During development, watch for changes
-apexcss-cli watch
+apex watch
 ```
 
 ## Automatic Framework Detection
@@ -48,7 +53,7 @@ ApexCSS CLI automatically detects your project framework and configures the inte
 | Nuxt | `nuxt` in dependencies | ✅ Instructions for nuxt.config.ts |
 | Vanilla | Default fallback | ✅ Added to main.js/ts |
 
-Run `apexcss-cli doctor` to see what was detected in your project.
+Run `apex doctor` to see what was detected in your project.
 
 ## Usage
 
@@ -56,55 +61,55 @@ Run `apexcss-cli doctor` to see what was detected in your project.
 
 ```bash
 # Interactive mode with prompts (default)
-apexcss-cli init
+apex init
 
 # Specify framework explicitly
-apexcss-cli init --framework=react
+apex init --framework=react
 
 # Custom output directory
-apexcss-cli init --output=./src/styles
+apex init --output=./src/styles
 
 # Skip adding imports to entry files
-apexcss-cli init --no-import
+apex init --no-import
 ```
 
 ### Build CSS
 
 ```bash
 # Build complete CSS (base + utilities + themes)
-apexcss-cli build
+apex build
 
 # Build specific layers only
-apexcss-cli build --layer base
-apexcss-cli build --layer utilities
-apexcss-cli build --layer themes
-apexcss-cli build --layer base,themes
+apex build --layer base
+apex build --layer utilities
+apex build --layer themes
+apex build --layer base,themes
 
 # Production build with minification
-apexcss-cli build --minify
+apex build --minify
 
 # Generate source maps
-apexcss-cli build --sourcemap
+apex build --sourcemap
 
 # Output as SCSS instead of CSS
-apexcss-cli build --format=scss
+apex build --format=scss
 ```
 
 ### Watch Mode
 
 ```bash
 # Watch config file for changes and auto-rebuild
-apexcss-cli watch
+apex watch
 
 # Watch with custom config path
-apexcss-cli watch --config=./custom.config.js
+apex watch --config=./custom.config.js
 ```
 
 ### Diagnostics
 
 ```bash
 # Run system diagnostics
-apexcss-cli doctor
+apex doctor
 ```
 
 ### Purge (Optimize Bundle Size)
@@ -113,22 +118,22 @@ The `purge` command analyzes your project's source files and automatically disab
 
 ```bash
 # Analyze project and show optimization report
-apexcss-cli purge
+apex purge
 
 # Dry run - show changes without applying
-apexcss-cli purge --dry-run
+apex purge --dry-run
 
 # Auto-apply changes without confirmation
-apexcss-cli purge --yes
+apex purge --yes
 
 # Scan specific directories
-apexcss-cli purge --src=./src,./components
+apex purge --src=./src,./components
 
 # Create backup before modifying
-apexcss-cli purge --backup
+apex purge --backup
 
 # Show detailed class usage statistics
-apexcss-cli purge --verbose
+apex purge --verbose
 ```
 
 **How it works:**
@@ -356,24 +361,24 @@ Current test coverage:
 
 ## How It Works
 
-1. **Initialization** (`apexcss-cli init`):
+1. **Initialization** (`apex init`):
    - Detects your project framework from package.json
    - Creates a starter config file (apex.config.js)
    - Optionally adds CSS import to your framework's entry file
    - Sets up .gitignore for output directory
 
-2. **Build Process** (`apexcss-cli build`):
+2. **Build Process** (`apex build`):
    - Reads your configuration
    - Generates SCSS based on enabled features
    - Uses the embedded Sass compiler to build CSS
    - Outputs minified CSS (with optional source maps)
 
-3. **Watch Mode** (`apexcss-cli watch`):
+3. **Watch Mode** (`apex watch`):
    - Monitors your config file for changes
    - Automatically rebuilds on change
    - Handles concurrent changes gracefully
 
-4. **Purge/Optimization** (`apexcss-cli purge`):
+4. **Purge/Optimization** (`apex purge`):
    - Scans your project's source files (HTML, JSX, Vue, etc.)
    - Extracts all CSS class names used
    - Maps classes to ApexCSS feature categories
