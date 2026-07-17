@@ -93,7 +93,12 @@ apex build --sourcemap
 
 # Output as SCSS instead of CSS
 apex build --format=scss
+
+# Production build: compile, then tree-shake the result in one step
+apex build --purge
 ```
+
+`--purge` scans your project's source files and tree-shakes the freshly built CSS in place, in a single non-interactive command — equivalent to running `apex build` followed by `apex purge --yes`. Unlike `apex purge`, it never modifies `apex.config.js`; it only prunes the compiled CSS output.
 
 ### Watch Mode
 
@@ -197,6 +202,8 @@ cp apex.config.js.backup apex.config.js
 |--------|-------------|---------|
 | `--format <format>` | Output format (css, scss) | `css` |
 | `-l, --layer <layers>` | Build specific layers (base, utilities, themes, all) | `all` |
+| `--no-cache` | Skip build cache and force recompilation | - |
+| `--purge` | Tree-shake compiled CSS immediately after building | `false` |
 
 **`purge` command:**
 | Option | Description | Default |
