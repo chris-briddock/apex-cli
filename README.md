@@ -114,10 +114,10 @@ apex doctor
 
 ### Purge (Optimize Bundle Size)
 
-The `purge` command analyzes your project's source files and automatically disables unused ApexCSS features to reduce bundle size.
+The `purge` command analyzes your project's source files, disables unused ApexCSS features in your config, and by default tree-shakes your compiled CSS in `node_modules/apexcss/dist` down to only the rules your project actually uses.
 
 ```bash
-# Analyze project and show optimization report
+# Analyze project, disable unused features, and tree-shake compiled CSS
 apex purge
 
 # Dry run - show changes without applying
@@ -134,6 +134,12 @@ apex purge --backup
 
 # Show detailed class usage statistics
 apex purge --verbose
+
+# Only adjust feature flags in apex.config.js, skip CSS tree-shaking
+apex purge --no-prune-css
+
+# Tree-shake CSS from/to a custom location
+apex purge --css-dir=./dist/css --css-out=./dist/css-pruned
 ```
 
 **How it works:**
@@ -143,6 +149,9 @@ apex purge --verbose
 4. Identifies features that are enabled but not used
 5. Shows you which features can be safely disabled
 6. Updates your `apex.config.js` to disable unused features
+7. Tree-shakes your compiled CSS (`apex build` output) down to the classes actually in use, unless `--no-prune-css` is passed
+
+Run `apex build` before `apex purge` so there's compiled CSS to tree-shake. If none is found, purge still updates your config and prints a reminder instead of failing.
 
 **Example output:**
 ```
@@ -193,10 +202,15 @@ cp apex.config.js.backup apex.config.js
 | Option | Description | Default |
 |--------|-------------|---------|
 | `--src <dirs>` | Comma-separated source directories to scan | Auto-detect |
+| `--exclude <dirs>` | Comma-separated directories to exclude from scanning | - |
 | `--dry-run` | Show changes without applying | `false` |
 | `-y, --yes` | Skip confirmation prompt | `false` |
 | `--backup` | Create backup before modifying config | `false` |
-| `-v, --verbose` | Show detailed class usage statistics | `false` |
+| `--verbose-stats` | Show detailed class usage statistics | `false` |
+| `--report <path>` | Write a JSON analysis report to the given path | - |
+| `--no-prune-css` | Skip CSS tree-shaking; only adjust feature flags | prune-css runs by default |
+| `--css-dir <dir>` | Directory containing compiled CSS to prune | `node_modules/apexcss/dist` |
+| `--css-out <dir>` | Directory for pruned CSS output | Same as `--css-dir` |
 
 ## Configuration
 
