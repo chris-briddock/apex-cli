@@ -1,6 +1,6 @@
 # ApexCSS CLI — LLM Reference
 
-> Machine-readable reference for the apexcss-cli package (v0.4.3).
+> Machine-readable reference for the apexcss-cli package (v0.5.0).
 > Follows the llms.txt convention: https://llmstxt.org
 
 ---
@@ -8,7 +8,7 @@
 ## Project
 
 - **Name:** apexcss-cli
-- **Version:** 0.4.3
+- **Version:** 0.5.0
 - **Description:** CLI tool for building, optimising, and managing the ApexCSS utility-first CSS framework.
 - **Language:** TypeScript (ESM, Node.js ≥ 22)
 - **Repository:** https://github.com/chris-briddock/apex-cli
@@ -69,6 +69,7 @@ Options:
 - `--minify` — minify output. Uses LightningCSS if installed, falls back to Sass compressed
 - `--sourcemap` — emit `.css.map` files
 - `--no-cache` — skip cache and force recompilation
+- `--purge` — tree-shake the compiled CSS immediately after building, using the project's own source files. Equivalent to running `apexcss purge --yes` right after. Never modifies `apex.config.js` — only prunes CSS output
 
 Output files (default dir: `node_modules/apexcss/dist`):
 - `base.css` — reset + base element styles
@@ -101,8 +102,8 @@ Checks the environment and reports:
 ### `apexcss purge [options]`
 Two-phase optimisation:
 1. Scans source files → extracts all CSS class names used
-2. Disables ApexCSS feature modules not referenced by any class
-3. Optionally tree-shakes the compiled CSS at the rule level (`--prune-css`)
+2. Disables ApexCSS feature modules not referenced by any class (tracks the full set of ~102 feature toggles the build system supports)
+3. Tree-shakes the compiled CSS at the rule and declaration level, by default (pass `--no-prune-css` to skip and only adjust feature flags)
 
 Options:
 - `--src <dirs>` — comma-separated directories to scan. Default: auto-detected from framework
@@ -112,7 +113,7 @@ Options:
 - `--backup` — write `apex.config.js.<timestamp>.backup` before modifying
 - `--verbose-stats` — print per-class statistics (modifier counts, responsive variants, etc.)
 - `--report <path>` — write full JSON analysis to a file
-- `--prune-css` — after scanning, tree-shake compiled CSS files to remove unused rules
+- `--no-prune-css` — skip CSS tree-shaking; only adjust feature flags in the config
 - `--css-dir <dir>` — directory containing compiled CSS to prune. Default: `node_modules/apexcss/dist`
 - `--css-out <dir>` — output directory for pruned CSS. Default: same as `--css-dir` (overwrites in place)
 
