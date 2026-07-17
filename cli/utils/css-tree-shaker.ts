@@ -259,6 +259,82 @@ function isSubSelectorUsed(selector: string, usedClasses: Set<string>): boolean 
   });
 }
 
+interface Declaration {
+  prop: string;
+  raw: string;
+}
+
+const VAR_REF_PATTERN = /var\(\s*(--[\w-]+)/g;
+
+/**
+ * Split a declaration block into individual `prop: value` entries.
+ */
+function splitDeclarations(declarations: string): Declaration[] {
+  return declarations
+    .split(';')
+    .map(d => d.trim())
+    .filter(d => d.length > 0)
+    .map(raw => ({ prop: raw.slice(0, raw.indexOf(':')).trim(), raw }));
+}
+
+/**
+ * Collect every `var(--name)` reference found in a string into `refs`.
+ */
+function collectVarReferences(text: string, refs: Set<string>): void {
+  const re = new RegExp(VAR_REF_PATTERN.source, 'g');
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(text)) !== null) {
+    refs.add(match[1]);
+  }
+}
+
+/**
+ * `:root` blocks are always kept wholesale by shouldKeepSelector, but a
+ * framework's full custom-property set (e.g. every color shade) can dwarf
+ * everything else in the file. This prunes individual unreferenced
+ * `--custom-property` declarations out of kept `:root` rules, leaving
+ * non-custom-property declarations and referenced variables untouched.
+ *
+ * Note: this only sees references inside the CSS being tree-shaken. A
+ * custom property consumed directly from user code (e.g. an inline
+ * `style={{ color: 'var(--color-primary-500)' }}`) rather than through a
+ * utility class won't be detected as "referenced" and may be pruned.
+ */
+function pruneUnusedCustomProperties(keptRules: CSSRule[]): void {
+  const rootRules = keptRules.filter(r => r.selector.trim() === ':root');
+  if (rootRules.length === 0) return;
+
+  const referenced = new Set<string>();
+  for (const rule of keptRules) {
+    if (!rootRules.includes(rule)) {
+      collectVarReferences(rule.declarations, referenced);
+    }
+  }
+
+  const rootDeclarations = rootRules.flatMap(r => splitDeclarations(r.declarations));
+
+  // Fixed point: a kept custom property's own value may reference another
+  // custom property (e.g. --color-primary: var(--color-primary-500)).
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const { prop, raw } of rootDeclarations) {
+      if (prop.startsWith('--') && referenced.has(prop)) {
+        const before = referenced.size;
+        collectVarReferences(raw, referenced);
+        if (referenced.size !== before) changed = true;
+      }
+    }
+  }
+
+  for (const rule of rootRules) {
+    const kept = splitDeclarations(rule.declarations).filter(
+      ({ prop }) => !prop.startsWith('--') || referenced.has(prop)
+    );
+    rule.declarations = kept.map(d => d.raw).join(';\n  ');
+  }
+}
+
 /**
  * Tree-shake CSS by removing unused rules.
  * Preserves @layer / @media / @supports wrappers even if partially pruned.
@@ -283,31 +359,50 @@ export function treeShakeCSS(css: string, usedClasses: Set<string>): string {
     }
   }
 
-  const output: string[] = [];
-
-  // Emit top-level rules
-  for (const rule of topLevelRules) {
-    if (shouldKeepSelector(rule.selector, usedClasses)) {
-      output.push(formatRule(rule.selector, rule.declarations, ''));
-    }
-  }
-
-  // Emit at-rule groups
+  // Resolve which rules survive selector-level filtering first, so
+  // declaration-level pruning (below) can see the full surviving set —
+  // including rules inside @media/@supports blocks — before anything is formatted.
+  const keptTopLevel = topLevelRules.filter(rule => shouldKeepSelector(rule.selector, usedClasses));
+  const keptAtRuleGroups: Array<{ block: AtRuleBlock; rules: CSSRule[] }> = [];
   for (const [, group] of atRuleGroups) {
     const { block, rules: groupRules } = group;
 
-    // @keyframes / @font-face: keep as-is if any rule matches
+    if (block.keyword === 'keyframes' || block.keyword === 'font-face') {
+      keptAtRuleGroups.push({ block, rules: [] });
+      continue;
+    }
+
+    const kept = groupRules.filter(r => shouldKeepSelector(r.selector, usedClasses));
+    if (kept.length > 0) {
+      keptAtRuleGroups.push({ block, rules: kept });
+    }
+  }
+
+  pruneUnusedCustomProperties([...keptTopLevel, ...keptAtRuleGroups.flatMap(g => g.rules)]);
+
+  // A :root rule can end up with no surviving declarations once unused
+  // custom properties are stripped — drop the now-empty shell rather than
+  // emitting `:root {\n\n}`.
+  const isEmptyRootRule = (rule: CSSRule): boolean =>
+    rule.selector.trim() === ':root' && rule.declarations.trim() === '';
+
+  const output: string[] = [];
+
+  for (const rule of keptTopLevel) {
+    if (isEmptyRootRule(rule)) continue;
+    output.push(formatRule(rule.selector, rule.declarations, ''));
+  }
+
+  for (const { block, rules: groupRules } of keptAtRuleGroups) {
     if (block.keyword === 'keyframes' || block.keyword === 'font-face') {
       output.push(block.raw);
       continue;
     }
 
-    // Filter kept rules within the block
-    const kept = groupRules.filter(r => shouldKeepSelector(r.selector, usedClasses));
-    if (kept.length === 0) continue;
+    const survivingRules = groupRules.filter(r => !isEmptyRootRule(r));
+    if (survivingRules.length === 0) continue;
 
-    // Rebuild the at-rule block with only kept rules
-    const innerLines = kept.map(r => formatRule(r.selector, r.declarations, '  '));
+    const innerLines = survivingRules.map(r => formatRule(r.selector, r.declarations, '  '));
     output.push(`${block.condition} {\n${innerLines.join('\n\n')}\n}`);
   }
 

@@ -149,7 +149,7 @@ describe('css-tree-shaker', () => {
         :root { --primary: blue; }
         html { font-size: 16px; }
         body { margin: 0; }
-        .flex { display: flex; }
+        .flex { display: flex; color: var(--primary); }
       `;
       const usedClasses = new Set(['flex']);
       const result = treeShakeCSS(css, usedClasses);
@@ -157,6 +157,60 @@ describe('css-tree-shaker', () => {
       assert(result.includes(':root'));
       assert(result.includes('html'));
       assert(result.includes('body'));
+    });
+
+    it('should drop custom properties from :root that no surviving rule references', () => {
+      const css = `
+        :root { --primary: blue; --unused: red; }
+        .flex { display: flex; color: var(--primary); }
+        .grid { display: grid; }
+      `;
+      const usedClasses = new Set(['flex']);
+      const result = treeShakeCSS(css, usedClasses);
+
+      assert(result.includes('--primary'), 'referenced custom property should be kept');
+      assert(!result.includes('--unused'), 'unreferenced custom property should be pruned');
+    });
+
+    it('should keep a custom property referenced only by another surviving custom property', () => {
+      const css = `
+        :root {
+          --primary-500: blue;
+          --primary: var(--primary-500);
+          --unused: red;
+        }
+        .flex { display: flex; color: var(--primary); }
+      `;
+      const usedClasses = new Set(['flex']);
+      const result = treeShakeCSS(css, usedClasses);
+
+      assert(result.includes('--primary-500'), 'transitively referenced custom property should be kept');
+      assert(result.includes('--primary:'), 'directly referenced custom property should be kept');
+      assert(!result.includes('--unused'), 'unreferenced custom property should still be pruned');
+    });
+
+    it('should drop the :root rule entirely when every custom property is unreferenced', () => {
+      const css = `
+        :root { --unused: red; }
+        .flex { display: flex; }
+      `;
+      const usedClasses = new Set(['flex']);
+      const result = treeShakeCSS(css, usedClasses);
+
+      assert(!result.includes(':root'), 'empty :root shell should be dropped');
+      assert(!result.includes('--unused'));
+    });
+
+    it('should not touch non-custom-property declarations inside :root', () => {
+      const css = `
+        :root { color-scheme: light dark; --unused: red; }
+        .flex { display: flex; }
+      `;
+      const usedClasses = new Set(['flex']);
+      const result = treeShakeCSS(css, usedClasses);
+
+      assert(result.includes('color-scheme'), 'regular declarations in :root are never pruned');
+      assert(!result.includes('--unused'));
     });
   });
 
