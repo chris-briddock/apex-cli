@@ -40,7 +40,8 @@ describe('feature-mapper', () => {
       assert.strictEqual(classMatchesFeature('p-4', 'spacing'), true);
       assert.strictEqual(classMatchesFeature('m-2', 'spacing'), true);
       assert.strictEqual(classMatchesFeature('px-8', 'spacing'), true);
-      assert.strictEqual(classMatchesFeature('space-x-4', 'spacing'), true);
+      // space-x-*/space-y-* moved to the dedicated `spaceBetween` feature (see issue #18)
+      assert.strictEqual(classMatchesFeature('space-x-4', 'spaceBetween'), true);
     });
 
     it('should match grid classes', () => {
@@ -113,6 +114,74 @@ describe('feature-mapper', () => {
       assert(used.has('animations'));
       assert(used.has('transforms'));
       assert(used.has('filters'));
+    });
+
+    it("should strip ApexCSS's default breakpoint variants (xxl:/xxxl:), not just Tailwind's 2xl:", () => {
+      // ApexCSS's default breakpoint scale is sm/md/lg/xl/xxl/xxxl (see config-builder.ts),
+      // not Tailwind's sm/md/lg/xl/2xl. Before issue #18, xxl:/xxxl: weren't stripped, so
+      // every class only used at those breakpoints was invisible to usage detection.
+      const classes = new Set(['xxl:flex', 'xxxl:p-4']);
+      const used = findUsedFeatures(classes);
+      assert(used.has('display') || used.has('flexbox'), 'xxl:flex should resolve to a base feature');
+      assert(used.has('spacing'), 'xxxl:p-4 should resolve to spacing');
+    });
+  });
+
+  describe('feature toggles synced from FeatureToggles (issue #18)', () => {
+    it('should track features previously entirely missing from the mapper', () => {
+      const names = getFeatureNames();
+      for (const feature of [
+        'ring',
+        'divide',
+        'spaceBetween',
+        'letterSpacing',
+        'lineHeight',
+        'placeItems',
+        'justifyItems',
+        'willChange',
+        'hover',
+        'focus',
+        'active',
+        'disabled',
+        'list',
+        'masks',
+        'scroll',
+        'interaction'
+      ]) {
+        assert(names.includes(feature), `getFeatureNames() should include ${feature}`);
+      }
+    });
+
+    it('should no longer expose the phantom pointerEvents/resize features', () => {
+      // These never corresponded to a real FeatureToggles key — disabling them in
+      // apex.config.js was a silent no-op at build time. Folded into `interaction`.
+      const names = getFeatureNames();
+      assert(!names.includes('pointerEvents'));
+      assert(!names.includes('resize'));
+    });
+
+    it('should match ring classes distinctly from borders', () => {
+      assert.strictEqual(classMatchesFeature('ring-2', 'ring'), true);
+      assert.strictEqual(classMatchesFeature('ring-offset-4', 'ring'), true);
+    });
+
+    it('should match individual state-variant features', () => {
+      assert.strictEqual(classMatchesFeature('hover:bg-primary', 'hover'), true);
+      assert.strictEqual(classMatchesFeature('focus:outline-none', 'focus'), true);
+      assert.strictEqual(classMatchesFeature('active:scale-95', 'active'), true);
+      assert.strictEqual(classMatchesFeature('disabled:opacity-50', 'disabled'), true);
+    });
+
+    it('should match list, masks, and scroll utility classes', () => {
+      assert.strictEqual(classMatchesFeature('list-disc', 'list'), true);
+      assert.strictEqual(classMatchesFeature('mask-none', 'masks'), true);
+      assert.strictEqual(classMatchesFeature('scroll-smooth', 'scroll'), true);
+      assert.strictEqual(classMatchesFeature('snap-start', 'scroll'), true);
+    });
+
+    it('should fold pointer-events and resize classes into interaction', () => {
+      assert.strictEqual(classMatchesFeature('pointer-events-none', 'interaction'), true);
+      assert.strictEqual(classMatchesFeature('resize-none', 'interaction'), true);
     });
   });
 

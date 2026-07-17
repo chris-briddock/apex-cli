@@ -138,13 +138,10 @@ export const FEATURE_MAPPINGS: Record<string, FeatureMapping> = {
       '-mt-',
       '-mr-',
       '-mb-',
-      '-ml-',
-      'space-',
-      'space-x-',
-      'space-y-'
+      '-ml-'
     ],
-    patterns: [/^[mp][xytrbl]?-/, /^-[mp][xytrbl]?-/, /^space-[xy]-/],
-    estimatedSize: 30
+    patterns: [/^[mp][xytrbl]?-/, /^-[mp][xytrbl]?-/],
+    estimatedSize: 26
   },
   sizing: {
     prefixes: ['w-', 'h-', 'min-w-', 'min-h-', 'max-w-', 'max-h-'],
@@ -154,36 +151,15 @@ export const FEATURE_MAPPINGS: Record<string, FeatureMapping> = {
 
   // Core Typography
   typography: {
-    prefixes: [
-      'text-',
-      'font-',
-      'leading-',
-      'tracking-',
-      'uppercase',
-      'lowercase',
-      'capitalize',
-      'normal-case',
-      'truncate',
-      'overflow-ellipsis',
-      'overflow-clip',
-      'whitespace-',
-      'break-',
-      'hyphens-'
-    ],
+    prefixes: ['text-', 'font-', 'uppercase', 'lowercase', 'capitalize', 'normal-case', 'truncate', 'whitespace-'],
     patterns: [
       /^text-(xs|sm|base|lg|xl|2xl|3xl|4xl|5xl|6xl|7xl|8xl|9xl)$/,
       /^font-(thin|extralight|light|normal|medium|semibold|bold|extrabold|black)$/,
-      /^leading-/,
-      /^tracking-/,
       /^(uppercase|lowercase|capitalize|normal-case)$/,
       /^truncate$/,
-      /^overflow-ellipsis$/,
-      /^overflow-clip$/,
-      /^whitespace-/,
-      /^break-/,
-      /^hyphens-/
+      /^whitespace-/
     ],
-    estimatedSize: 20
+    estimatedSize: 15
   },
 
   // Core Visual
@@ -197,17 +173,15 @@ export const FEATURE_MAPPINGS: Record<string, FeatureMapping> = {
       'border-',
       'divide-',
       'ring-',
-      'accent-',
-      'caret-',
       'fill-',
       'stroke-',
       'decoration-'
     ],
     patterns: [
-      /^(text|bg|border|divide|ring|accent|caret|fill|stroke|decoration)-(primary|gray|success|warning|danger|info|white|black|transparent|current|inherit)/,
+      /^(text|bg|border|divide|ring|fill|stroke|decoration)-(primary|gray|success|warning|danger|info|white|black|transparent|current|inherit)/,
       /^(from|via|to)-(primary|gray|success|warning|danger|info|white|black|transparent|current)/
     ],
-    estimatedSize: 35
+    estimatedSize: 32
   },
   backgrounds: {
     prefixes: ['bg-', 'from-', 'via-', 'to-', 'bg-gradient-', 'bg-opacity-'],
@@ -215,19 +189,9 @@ export const FEATURE_MAPPINGS: Record<string, FeatureMapping> = {
     estimatedSize: 25
   },
   borders: {
-    prefixes: ['border', 'border-', 'rounded', 'rounded-', 'divide-', 'ring', 'ring-', 'ring-offset-'],
-    patterns: [
-      /^border$/,
-      /^border-(solid|dashed|dotted|double|hidden|none)/,
-      /^border-[trbl]?-?/,
-      /^rounded/,
-      /^ring$/,
-      /^ring-/,
-      /^ring-offset-/,
-      /^divide-/,
-      /^ring-opacity-/
-    ],
-    estimatedSize: 20
+    prefixes: ['border', 'border-', 'rounded', 'rounded-'],
+    patterns: [/^border$/, /^border-(solid|dashed|dotted|double|hidden|none)/, /^border-[trbl]?-?/, /^rounded/],
+    estimatedSize: 15
   },
   shadows: {
     prefixes: ['shadow', 'shadow-', 'drop-shadow', 'drop-shadow-'],
@@ -257,23 +221,21 @@ export const FEATURE_MAPPINGS: Record<string, FeatureMapping> = {
     estimatedSize: 3
   },
   transitions: {
-    prefixes: ['transition', 'duration-', 'ease-', 'delay-', 'will-change-'],
-    patterns: [/^transition$/, /^transition-/, /^duration-/, /^ease-/, /^delay-/, /^will-change-/],
-    estimatedSize: 10
+    prefixes: ['transition', 'duration-', 'ease-', 'delay-'],
+    patterns: [/^transition$/, /^transition-/, /^duration-/, /^ease-/, /^delay-/],
+    estimatedSize: 9
   },
 
   // Extended Layout
   flexExtended: {
-    prefixes: ['content-', 'justify-items-', 'justify-self-', 'place-content-', 'place-items-', 'place-self-'],
+    prefixes: ['content-', 'justify-self-', 'place-content-', 'place-self-'],
     patterns: [
       /^content-(center|start|end|between|around|evenly|baseline|stretch)$/,
-      /^justify-items-/,
       /^justify-self-/,
       /^place-content-/,
-      /^place-items-/,
       /^place-self-/
     ],
-    estimatedSize: 8
+    estimatedSize: 6
   },
   gridExtended: {
     prefixes: ['col-span-', 'col-start-', 'col-end-', 'row-span-', 'row-start-', 'row-end-'],
@@ -281,13 +243,12 @@ export const FEATURE_MAPPINGS: Record<string, FeatureMapping> = {
     estimatedSize: 12
   },
   float: {
-    prefixes: ['float-', 'clear-', 'box-'],
+    prefixes: ['float-', 'clear-'],
     patterns: [
       /^float-(left|right|none|start|end|inline-start|inline-end)$/,
-      /^clear-(left|right|both|none|start|end|inline-start|inline-end)$/,
-      /^box-(border|content)$/
+      /^clear-(left|right|both|none|start|end|inline-start|inline-end)$/
     ],
-    estimatedSize: 3
+    estimatedSize: 2
   },
   containerQueries: {
     prefixes: ['@container', 'container'],
@@ -300,16 +261,15 @@ export const FEATURE_MAPPINGS: Record<string, FeatureMapping> = {
     estimatedSize: 1
   },
   columns: {
-    prefixes: ['columns-', 'break-after-', 'break-before-', 'break-inside-'],
-    patterns: [/^columns-/, /^break-after-/, /^break-before-/, /^break-inside-/],
-    estimatedSize: 5
+    // break-after-/break-before-/break-inside- moved to the dedicated `break` feature
+    prefixes: ['columns-'],
+    patterns: [/^columns-/],
+    estimatedSize: 4
   },
 
   // Extended Typography
   typographyExtended: {
     prefixes: [
-      'indent-',
-      'align-',
       'antialiased',
       'subpixel-antialiased',
       'tabular-nums',
@@ -322,8 +282,6 @@ export const FEATURE_MAPPINGS: Record<string, FeatureMapping> = {
       'slashed-zero'
     ],
     patterns: [
-      /^indent-/,
-      /^align-(baseline|top|middle|bottom|text-top|text-bottom|sub|super)$/,
       /^antialiased$/,
       /^subpixel-antialiased$/,
       /^tabular-nums$/,
@@ -506,14 +464,361 @@ export const FEATURE_MAPPINGS: Record<string, FeatureMapping> = {
     patterns: [/^select-(none|text|all|auto)$/],
     estimatedSize: 2
   },
-  pointerEvents: {
-    prefixes: ['pointer-events-'],
-    patterns: [/^pointer-events-(none|auto)$/],
+  interaction: {
+    prefixes: ['pointer-events-', 'resize', 'touch-'],
+    patterns: [/^pointer-events-(none|auto)$/, /^resize$/, /^resize-(none|y|x)$/, /^touch-/],
+    estimatedSize: 4
+  },
+
+  // Split out of formerly-coarse buckets (borders/spacing/typography/etc.) to match
+  // the real, more granular feature toggles the build already supports (see FeatureToggles
+  // in config-builder.ts) — purge previously couldn't detect or recommend disabling these.
+  ring: {
+    prefixes: ['ring', 'ring-', 'ring-offset-'],
+    patterns: [/^ring$/, /^ring-/, /^ring-offset-/, /^ring-opacity-/],
+    estimatedSize: 8
+  },
+  divide: {
+    prefixes: ['divide-'],
+    patterns: [/^divide-/],
+    estimatedSize: 4
+  },
+  spaceBetween: {
+    prefixes: ['space-', 'space-x-', 'space-y-'],
+    patterns: [/^space-[xy]-/],
+    estimatedSize: 4
+  },
+  letterSpacing: {
+    prefixes: ['tracking-'],
+    patterns: [/^tracking-/],
+    estimatedSize: 3
+  },
+  lineHeight: {
+    prefixes: ['leading-'],
+    patterns: [/^leading-/],
+    estimatedSize: 3
+  },
+  placeItems: {
+    prefixes: ['place-items-'],
+    patterns: [/^place-items-/],
+    estimatedSize: 2
+  },
+  justifyItems: {
+    prefixes: ['justify-items-'],
+    patterns: [/^justify-items-/],
+    estimatedSize: 2
+  },
+  willChange: {
+    prefixes: ['will-change-'],
+    patterns: [/^will-change-/],
+    estimatedSize: 2
+  },
+  box: {
+    prefixes: ['box-'],
+    patterns: [/^box-(border|content)$/],
     estimatedSize: 1
   },
-  resize: {
-    prefixes: ['resize'],
-    patterns: [/^resize$/, /^resize-(none|y|x)$/],
+  accentColor: {
+    prefixes: ['accent-'],
+    patterns: [/^accent-/],
+    estimatedSize: 2
+  },
+  caret: {
+    prefixes: ['caret-'],
+    patterns: [/^caret-/],
+    estimatedSize: 2
+  },
+  verticalAlign: {
+    prefixes: ['align-'],
+    patterns: [/^align-(baseline|top|middle|bottom|text-top|text-bottom|sub|super)$/],
+    estimatedSize: 2
+  },
+  textIndent: {
+    prefixes: ['indent-'],
+    patterns: [/^indent-/],
+    estimatedSize: 2
+  },
+
+  // State variants split out of the combined `states` bucket
+  hover: {
+    prefixes: ['hover:'],
+    patterns: [/^hover:/],
+    estimatedSize: 5
+  },
+  focus: {
+    prefixes: ['focus:'],
+    patterns: [/^focus:/],
+    estimatedSize: 5
+  },
+  active: {
+    prefixes: ['active:'],
+    patterns: [/^active:/],
+    estimatedSize: 3
+  },
+  disabled: {
+    prefixes: ['disabled:'],
+    patterns: [/^disabled:/],
+    estimatedSize: 2
+  },
+
+  // Previously entirely unmapped real feature toggles, reverse-engineered against a
+  // built framework's utilities.css (see issue #18). A handful (marked below) have no
+  // discoverable class-name footprint — they govern base-element or generated-content
+  // styling rather than opt-in utility classes, so purge's class-name scanner can never
+  // detect their usage and will always list them as disable candidates.
+  all: {
+    prefixes: ['all-'],
+    patterns: [/^all-(inherit|initial|revert|unset)$/],
+    estimatedSize: 1
+  },
+  arbitrary: {
+    prefixes: [],
+    patterns: [/\[.+\]/],
+    estimatedSize: 5
+  },
+  borderRadiusLogical: {
+    prefixes: ['rounded-s-', 'rounded-e-', 'rounded-ss-', 'rounded-se-', 'rounded-ee-', 'rounded-es-'],
+    patterns: [/^rounded-(s|e|ss|se|ee|es)-/],
+    estimatedSize: 3
+  },
+  break: {
+    prefixes: ['break-before-', 'break-after-', 'break-inside-'],
+    patterns: [/^break-(before|after|inside)-/],
+    estimatedSize: 2
+  },
+  caption: {
+    prefixes: ['caption-'],
+    patterns: [/^caption-(top|bottom)$/],
+    estimatedSize: 1
+  },
+  colorModifiers: {
+    prefixes: [],
+    patterns: [/\/\d{1,3}$/],
+    estimatedSize: 4
+  },
+  colorScheme: {
+    prefixes: ['scheme-'],
+    patterns: [/^scheme-/],
+    estimatedSize: 2
+  },
+  columnsExtended: {
+    prefixes: ['column-rule', 'column-span-', 'column-width', 'column-fill-'],
+    patterns: [/^column-rule/, /^column-span-/, /^column-width/, /^column-fill-/],
+    estimatedSize: 4
+  },
+  counter: {
+    prefixes: ['counter-'],
+    patterns: [/^counter-(reset|increment|set)/],
+    estimatedSize: 2
+  },
+  fieldSizing: {
+    prefixes: ['field-sizing-'],
+    patterns: [/^field-sizing-/],
+    estimatedSize: 1
+  },
+  hangingPunctuation: {
+    prefixes: ['hang-'],
+    patterns: [/^hang-/],
+    estimatedSize: 1
+  },
+  hyphenate: {
+    prefixes: ['hyphenate-', 'hyphens-'],
+    patterns: [/^hyphenate-/, /^hyphens-/],
+    estimatedSize: 2
+  },
+  imageRendering: {
+    prefixes: ['image-'],
+    patterns: [/^image-(auto|crisp-edges|pixelated)$/],
+    estimatedSize: 1
+  },
+  initialLetter: {
+    prefixes: ['initial-letter-'],
+    patterns: [/^initial-letter-/],
+    estimatedSize: 1
+  },
+  list: {
+    prefixes: ['list-'],
+    patterns: [
+      /^list-(none|disc|decimal|circle|square|inside|outside|georgian|armenian|item)/,
+      /^list-(lower|upper)-/,
+      /^list-image-/
+    ],
+    estimatedSize: 4
+  },
+  // No confirmed distinct utility classes beyond what `list` already covers (e.g.
+  // list-decimal-leading-zero); mapped alongside it rather than left undetectable.
+  listStyleExtended: {
+    prefixes: ['list-'],
+    patterns: [/^list-(decimal-leading-zero)$/],
+    estimatedSize: 1
+  },
+  logicalProperties: {
+    prefixes: [
+      'bbe-',
+      'bbs-',
+      'bie-',
+      'bis-',
+      'mbe-',
+      'mbs-',
+      'mby-',
+      'mie-',
+      'mis-',
+      'mi-',
+      'pbe-',
+      'pbs-',
+      'pby-',
+      'pie-',
+      'pis-',
+      'pi-'
+    ],
+    patterns: [],
+    estimatedSize: 6
+  },
+  markerExtended: {
+    prefixes: ['marker-color-', 'marker-end-', 'marker-mid-', 'marker-start-'],
+    patterns: [/^marker-(color|end|mid|start)-/],
+    estimatedSize: 2
+  },
+  masks: {
+    prefixes: ['mask-'],
+    patterns: [/^mask-/],
+    estimatedSize: 6
+  },
+  offset: {
+    prefixes: ['offset-'],
+    patterns: [/^offset-/],
+    estimatedSize: 3
+  },
+  // No confirmed utility classes observed — governs print-typography orphan control,
+  // which is not exposed as an opt-in class in the framework build inspected.
+  orphans: {
+    prefixes: ['orphans-'],
+    patterns: [/^orphans-\d/],
+    estimatedSize: 1
+  },
+  // No confirmed utility classes observed for this toggle specifically.
+  overflowExtended: {
+    prefixes: [],
+    patterns: [],
+    estimatedSize: 1
+  },
+  overscrollBehavior: {
+    prefixes: ['overscroll-'],
+    patterns: [/^overscroll-(auto|contain|none)$/, /^overscroll-[xy]-/],
+    estimatedSize: 2
+  },
+  overscrollBehaviorExtended: {
+    prefixes: ['overscroll-block-', 'overscroll-inline-'],
+    patterns: [/^overscroll-(block|inline)-/],
+    estimatedSize: 1
+  },
+  // No confirmed utility classes observed — legacy page-break-* properties may only be
+  // reachable via arbitrary values, not a dedicated utility set, in the build inspected.
+  pageBreak: {
+    prefixes: [],
+    patterns: [],
+    estimatedSize: 1
+  },
+  quotes: {
+    prefixes: ['quotes-'],
+    patterns: [/^quotes-/],
+    estimatedSize: 1
+  },
+  scroll: {
+    prefixes: ['scroll-', 'scrollbar-', 'snap-'],
+    patterns: [/^scroll-/, /^scrollbar-/, /^snap-/],
+    estimatedSize: 5
+  },
+  shapeOutside: {
+    prefixes: ['shape-'],
+    patterns: [/^shape-(circle|ellipse|inset|polygon|none)$/],
+    estimatedSize: 1
+  },
+  sizingLogical: {
+    prefixes: ['bs-', 'is-', 'max-bs-', 'max-is-', 'min-bs-', 'min-is-'],
+    patterns: [/^(bs|is)-/, /^(max|min)-(bs|is)-/],
+    estimatedSize: 3
+  },
+  // Overlaps intentionally with `colors` (fill-/stroke- are shared with SVG presentation
+  // attributes); no distinct SVG-only utility prefix was observed.
+  svg: {
+    prefixes: ['fill-', 'stroke-'],
+    patterns: [],
+    estimatedSize: 2
+  },
+  // No confirmed utility classes observed — likely governs base <table> element reset
+  // styles rather than an opt-in class, so it's undetectable via class-name scanning.
+  table: {
+    prefixes: [],
+    patterns: [],
+    estimatedSize: 1
+  },
+  tabSize: {
+    prefixes: ['tab-'],
+    patterns: [/^tab-\d/],
+    estimatedSize: 1
+  },
+  // No confirmed utility classes observed for this toggle specifically.
+  textAlignLast: {
+    prefixes: [],
+    patterns: [],
+    estimatedSize: 1
+  },
+  textDecorationExtended: {
+    prefixes: ['underline', 'no-underline', 'overline', 'line-through'],
+    patterns: [/^underline$/, /^no-underline$/, /^overline$/, /^line-through$/],
+    estimatedSize: 2
+  },
+  textEmphasis: {
+    prefixes: ['emphasis-'],
+    patterns: [/^emphasis-/],
+    estimatedSize: 2
+  },
+  // No confirmed utility classes observed for this toggle specifically.
+  textJustify: {
+    prefixes: [],
+    patterns: [],
+    estimatedSize: 1
+  },
+  // No confirmed utility classes observed distinct from `writingMode`.
+  textOrientation: {
+    prefixes: [],
+    patterns: [],
+    estimatedSize: 1
+  },
+  textShadow: {
+    prefixes: ['text-shadow-'],
+    patterns: [/^text-shadow-/],
+    estimatedSize: 2
+  },
+  textUnderline: {
+    prefixes: ['underline-offset-', 'underline-auto', 'underline-from-font', 'underline-under'],
+    patterns: [/^underline-offset-/],
+    estimatedSize: 1
+  },
+  unicodeBidi: {
+    prefixes: ['bidi-', 'direction-'],
+    patterns: [/^bidi-/, /^direction-(ltr|rtl)$/],
+    estimatedSize: 1
+  },
+  wordBreak: {
+    prefixes: ['break-normal', 'break-words', 'break-all', 'break-keep'],
+    patterns: [/^break-(normal|words|all|keep)$/],
+    estimatedSize: 2
+  },
+  wordWrap: {
+    prefixes: ['wrap-'],
+    patterns: [/^wrap-/],
+    estimatedSize: 1
+  },
+  writingMode: {
+    prefixes: ['writing-'],
+    patterns: [/^writing-(horizontal|vertical)-/],
+    estimatedSize: 1
+  },
+  zoom: {
+    prefixes: ['zoom-'],
+    patterns: [/^zoom-/],
     estimatedSize: 1
   }
 };
@@ -573,7 +878,12 @@ const VARIANT_PREFIXES = [
   'md:',
   'lg:',
   'xl:',
+  // ApexCSS's default breakpoint scale is sm/md/lg/xl/xxl/xxxl, not Tailwind's 2xl —
+  // both are stripped since a project's apex.config.js can override breakpoint names.
   '2xl:',
+  'xxl:',
+  'xxxl:',
+  'ultra:',
   'hover:',
   'focus:',
   'active:',
