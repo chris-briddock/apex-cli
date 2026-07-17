@@ -3,7 +3,7 @@
  */
 
 import { existsSync } from 'node:fs';
-import { readdir, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, writeFile } from 'node:fs/promises';
 import { extname, resolve } from 'node:path';
 import { loadConfig } from '../utils/config-loader.ts';
 import {
@@ -247,6 +247,10 @@ async function pruneBuiltCss(
     return;
   }
 
+  if (!isDryRun && cssOut !== cssDir) {
+    await mkdir(cssOut, { recursive: true });
+  }
+
   let totalOriginal = 0;
   let totalNew = 0;
 
@@ -469,8 +473,9 @@ export async function purgeCommand(options: PurgeOptions): Promise<void> {
     }
   }
 
-  // CSS tree shaking — produce minimal CSS output
-  if (options.pruneCss) {
+  // CSS tree shaking — produce minimal CSS output.
+  // On by default; pass pruneCss: false (--no-prune-css on the CLI) to skip it.
+  if (options.pruneCss !== false) {
     const defaultCssDir = resolve(cwd, 'node_modules', 'apexcss', 'dist');
     const cssDir = options.cssDir ? resolve(cwd, options.cssDir) : defaultCssDir;
     const cssOut = options.cssOut ? resolve(cwd, options.cssOut) : cssDir;

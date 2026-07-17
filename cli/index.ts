@@ -154,7 +154,7 @@ export function cli(args: string[]): void {
     .option('--backup', 'create backup before modifying config')
     .option('--verbose-stats', 'show detailed class usage statistics')
     .option('--report <path>', 'write a JSON analysis report to the given file path')
-    .option('--prune-css', 'tree-shake compiled CSS files to remove unused rules', false)
+    .option('--no-prune-css', 'skip CSS tree-shaking; only adjust feature flags in the config')
     .option('--css-dir <dir>', 'directory containing compiled CSS to prune (default: node_modules/apexcss/dist)')
     .option('--css-out <dir>', 'directory for pruned CSS output (default: same as --css-dir, overwrites in place)')
     .action(async options => {

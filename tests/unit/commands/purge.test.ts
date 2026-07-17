@@ -321,6 +321,80 @@ describe('purge command', () => {
     });
   });
 
+  describe('CSS tree-shaking (prune-css)', () => {
+    it('should tree-shake compiled CSS by default without passing --prune-css', async () => {
+      await writeFile(join(tempDir, 'apex.config.js'), 'export default { features: { display: true } };');
+
+      await mkdir(join(tempDir, 'src'), { recursive: true });
+      await writeFile(join(tempDir, 'src', 'index.html'), '<div class="flex"></div>');
+
+      await mkdir(join(tempDir, 'css'), { recursive: true });
+      await writeFile(
+        join(tempDir, 'css', 'app.css'),
+        '.flex {\n  display: flex;\n}\n\n.unused-class {\n  color: red;\n}'
+      );
+
+      await purgeCommand({
+        configPath: './apex.config.js',
+        src: './src',
+        yes: true,
+        cssDir: './css',
+        cssOut: './css-out'
+      });
+
+      const { readFile } = await import('node:fs/promises');
+      const pruned = await readFile(join(tempDir, 'css-out', 'app.css'), 'utf-8');
+      assert(pruned.includes('.flex'), 'used selector should be kept');
+      assert(!pruned.includes('.unused-class'), 'unused selector should be removed by default');
+    });
+
+    it('should skip CSS tree-shaking when pruneCss is explicitly false (--no-prune-css)', async () => {
+      await writeFile(join(tempDir, 'apex.config.js'), 'export default { features: { display: true } };');
+
+      await mkdir(join(tempDir, 'src'), { recursive: true });
+      await writeFile(join(tempDir, 'src', 'index.html'), '<div class="flex"></div>');
+
+      await mkdir(join(tempDir, 'css'), { recursive: true });
+      await writeFile(
+        join(tempDir, 'css', 'app.css'),
+        '.flex {\n  display: flex;\n}\n\n.unused-class {\n  color: red;\n}'
+      );
+
+      await purgeCommand({
+        configPath: './apex.config.js',
+        src: './src',
+        yes: true,
+        pruneCss: false,
+        cssDir: './css',
+        cssOut: './css-out'
+      });
+
+      const { existsSync } = await import('node:fs');
+      assert.strictEqual(existsSync(join(tempDir, 'css-out', 'app.css')), false, 'no pruned output should be written');
+    });
+
+    it('should warn and continue the config purge when the CSS directory is missing', async () => {
+      await writeFile(join(tempDir, 'apex.config.js'), 'export default { features: { display: true } };');
+
+      await mkdir(join(tempDir, 'src'), { recursive: true });
+      await writeFile(join(tempDir, 'src', 'index.html'), '<div class="flex"></div>');
+
+      // No css directory created — default prune-css should not throw, just warn and move on.
+      await purgeCommand({
+        configPath: './apex.config.js',
+        src: './src',
+        yes: true,
+        cssDir: './does-not-exist'
+      });
+
+      // Config purge still completed successfully.
+      const configContent = await import('node:fs/promises').then(m =>
+        m.readFile(join(tempDir, 'apex.config.js'), 'utf-8')
+      );
+      assert(configContent.includes('features'));
+    });
+  });
+
   describe('framework detection', () => {
     it('should auto-detect framework from package.json', async () => {
       await writeFile(join(tempDir, 'package.json'), JSON.stringify({ dependencies: { react: '^18.0.0' } }));
