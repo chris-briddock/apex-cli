@@ -71,7 +71,7 @@ const DEFAULT_SRC_DIRS = ['src', 'components', 'pages', 'app'];
 /**
  * Determine source directories to scan based on options and framework
  */
-function determineSourceDirectories(options: PurgeOptions, cwd: string): string[] {
+export function determineSourceDirectories(options: { src?: string }, cwd: string): string[] {
   if (options.src) {
     // Filter provided directories to only those that exist
     return options.src
@@ -221,7 +221,7 @@ async function writeReport(reportPath: string, report: PurgeReport): Promise<voi
  * Tree-shake all CSS files in cssDir and write pruned output to cssOut.
  * Reports per-file and total savings.
  */
-async function pruneBuiltCss(
+export async function pruneBuiltCss(
   cssDir: string,
   cssOut: string,
   usedClasses: Set<string>,

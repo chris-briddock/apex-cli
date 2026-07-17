@@ -9,6 +9,8 @@ import { cacheGet, cacheSet, computeCacheKey } from '../utils/cache.ts';
 import { generateSCSS } from '../utils/config-builder.ts';
 import { loadConfig } from '../utils/config-loader.ts';
 import { logger } from '../utils/logger.ts';
+import { scanDirectories } from '../utils/purge-analyzer.ts';
+import { determineSourceDirectories, pruneBuiltCss } from './purge.ts';
 
 /**
  * Valid layer names
@@ -312,4 +314,29 @@ export async function buildCommand(options: BuildOptions): Promise<void> {
   logger.success(`Build completed in ${duration}ms`);
   logger.newline();
   logger.info(`Output directory: ${logger.path(options.outputDir)}`);
+}
+
+/**
+ * Tree-shake the CSS a build just produced, using the project's own source files
+ * to determine which classes are actually in use. Used by `apex build --purge` to
+ * combine building and pruning into a single, CI-friendly step. This only prunes
+ * CSS in place — it never modifies apex.config.js (that remains `apex purge`'s job).
+ */
+export async function runPostBuildPurge(cwd: string, outputDir: string): Promise<void> {
+  const srcDirs = determineSourceDirectories({}, cwd);
+
+  if (srcDirs.length === 0) {
+    logger.newline();
+    logger.warn('No source directories found to scan — skipping CSS purge');
+    logger.info('Specify directories your project uses, or run "apex purge --src=..." manually');
+    return;
+  }
+
+  logger.newline();
+  logger.info(`Scanning directories: ${srcDirs.join(', ')}`);
+
+  const scanResult = await scanDirectories(srcDirs.map(dir => resolve(cwd, dir)));
+  logger.success(`Scanned ${scanResult.files} files, found ${scanResult.classes.size} unique classes`);
+
+  await pruneBuiltCss(outputDir, outputDir, scanResult.classes, false);
 }

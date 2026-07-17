@@ -3,11 +3,11 @@
  */
 
 import assert from 'node:assert';
-import { existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
-import { determineSourceDir, parseLayers, writeConfigFiles } from '../../../cli/commands/build.ts';
+import { determineSourceDir, parseLayers, runPostBuildPurge, writeConfigFiles } from '../../../cli/commands/build.ts';
 
 describe('build command', () => {
   let tempDir: string;
@@ -75,6 +75,35 @@ describe('build command', () => {
 
       // Verify _custom-config.scss is written to source config directory
       assert.ok(existsSync(join(testSourceConfigDir, '_custom-config.scss')));
+    });
+  });
+
+  describe('runPostBuildPurge (used by `apex build --purge`)', () => {
+    it('should tree-shake CSS in the output directory using the project source', async () => {
+      mkdirSync(join(tempDir, 'src'), { recursive: true });
+      writeFileSync(join(tempDir, 'src', 'index.html'), '<div class="flex"></div>');
+
+      const outputDir = join(tempDir, 'dist');
+      mkdirSync(outputDir, { recursive: true });
+      writeFileSync(join(outputDir, 'app.css'), '.flex {\n  display: flex;\n}\n\n.unused {\n  color: red;\n}');
+
+      await runPostBuildPurge(tempDir, outputDir);
+
+      const pruned = readFileSync(join(outputDir, 'app.css'), 'utf-8');
+      assert(pruned.includes('.flex'), 'used selector should survive');
+      assert(!pruned.includes('.unused'), 'unused selector should be pruned');
+    });
+
+    it('should warn and return without throwing when no source directories are found', async () => {
+      const outputDir = join(tempDir, 'dist');
+      mkdirSync(outputDir, { recursive: true });
+      writeFileSync(join(outputDir, 'app.css'), '.flex {\n  display: flex;\n}');
+
+      await runPostBuildPurge(tempDir, outputDir);
+
+      // Nothing to scan — output is left untouched rather than erroring.
+      const content = readFileSync(join(outputDir, 'app.css'), 'utf-8');
+      assert(content.includes('.flex'));
     });
   });
 });

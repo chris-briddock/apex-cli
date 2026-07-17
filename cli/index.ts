@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
 import { readFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Command } from 'commander';
 import { analyzeCommand } from './commands/analyze.ts';
-import { buildCommand } from './commands/build.ts';
+import { buildCommand, runPostBuildPurge } from './commands/build.ts';
 import { completionCommand } from './commands/completion.ts';
 import { doctorCommand } from './commands/doctor.ts';
 import { initCommand } from './commands/init.ts';
@@ -95,18 +95,28 @@ export function cli(args: string[]): void {
       'all'
     )
     .option('--no-cache', 'skip build cache and force recompilation')
+    .option(
+      '--purge',
+      'tree-shake compiled CSS immediately after building, using the project\'s own source files (equivalent to running "apex purge --yes" right after)',
+      false
+    )
     .action(async options => {
       try {
         configureLogLevel(program.opts());
+        const outputDir = program.opts().output;
         await buildCommand({
           configPath: program.opts().config,
-          outputDir: program.opts().output,
+          outputDir,
           minify: program.opts().minify,
           sourcemap: program.opts().sourcemap,
           format: options.format,
           layers: options.layer,
           noCache: !options.cache
         });
+
+        if (options.purge) {
+          await runPostBuildPurge(process.cwd(), resolve(process.cwd(), outputDir));
+        }
       } catch (error) {
         handleError(error as Error, program.opts().verbose);
       }
